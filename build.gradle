@@ -1,0 +1,173 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.1'
+    id 'io.spring.dependency-management' version '1.1.5'
+}
+
+group = 'eu.bosteels'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+    // TODO : replace with just spring-jdbc ?
+    //implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+
+    implementation group: 'org.springframework', name: 'spring-jdbc', version: '6.1.11'
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-thymeleaf
+//    implementation("org.springframework.boot:spring-boot-starter-thymeleaf:3.3.2")
+    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+
+
+    // We use an embedded ActiveMQ Artemis when we are not using SQS
+    // A background job fetches work from duckdb and puts it on Artemis queue
+    // where a JmsListener will consume it with configurable concurrency.
+    // Very similar to how we do it for SQS
+    implementation 'org.springframework.boot:spring-boot-starter-artemis'
+
+    implementation 'org.springframework.boot:spring-boot-starter-json'
+    runtimeOnly 'org.apache.activemq:artemis-jakarta-server'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    testImplementation 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // https://mvnrepository.com/artifact/nz.net.ultraq.thymeleaf/thymeleaf-layout-dialect
+    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
+
+    // https://mvnrepository.com/artifact/org.webjars/webjars-locator
+    implementation 'org.webjars:webjars-locator:0.52'
+
+    // https://mvnrepository.com/artifact/org.webjars.npm/htmx.org
+    implementation 'org.webjars.npm:htmx.org:2.0.2'
+
+    // https://mvnrepository.com/artifact/io.github.wimdeblauwe/htmx-spring-boot-thymeleaf
+    implementation 'io.github.wimdeblauwe:htmx-spring-boot-thymeleaf:3.4.1'
+
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.springframework.amqp:spring-rabbit-test'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:rabbitmq'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // https://mvnrepository.com/artifact/io.micrometer/micrometer-core
+    implementation group: 'io.micrometer', name: 'micrometer-core', version: '1.13.2'
+
+    // https://mvnrepository.com/artifact/commons-codec/commons-codec
+    // For now we only use it for encoding byte arrays to Hexadecimal strings
+    // (use this instead of bouncycastle which is 15x bigger)
+    implementation group: 'commons-codec', name: 'commons-codec', version: '1.17.1'
+
+    // https://mvnrepository.com/artifact/commons-net/commons-net
+    implementation group: 'commons-net', name: 'commons-net', version: '3.11.1'
+
+    // https://mvnrepository.com/artifact/com.github.seancfoley/ipaddress
+    implementation group: 'com.github.seancfoley', name: 'ipaddress', version: '5.4.1'
+
+    // https://mvnrepository.com/artifact/org.jsoup/jsoup
+    implementation group: 'org.jsoup', name: 'jsoup', version: '1.15.3'
+
+    // https://mvnrepository.com/artifact/com.maxmind.geoip2/geoip2
+    implementation group: 'com.maxmind.geoip2', name: 'geoip2', version: '4.2.0'
+
+    // https://mvnrepository.com/artifact/org.apache.commons/commons-compress
+    implementation 'org.apache.commons:commons-compress:1.26.0'
+
+    // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
+    implementation 'org.apache.commons:commons-lang3'
+
+    // https://mvnrepository.com/artifact/com.google.guava/guava
+    implementation group: 'com.google.guava', name: 'guava', version: '33.2.1-jre'
+
+    implementation 'org.apache.poi:poi:5.2.2'
+
+    implementation 'org.apache.commons:commons-text:1.10.0'
+
+    implementation group: 'org.duckdb', name: 'duckdb_jdbc', version: '1.1.0'
+
+    // https://mvnrepository.com/artifact/org.apache.commons/commons-rng-simple
+    implementation group: 'org.apache.commons', name: 'commons-rng-simple', version: '1.5'
+
+    // https://mvnrepository.com/artifact/com.github.tomakehurst/wiremock
+    // testImplementation group: 'com.github.tomakehurst', name: 'wiremock', version: '3.0.1'
+    // testImplementation group: 'com.github.tomakehurst', name: 'wiremock', version: '3.0.3'
+    // testImplementation group: 'com.github.tomakehurst', name: 'wiremock', version: '2.27.2'
+
+    // https://mvnrepository.com/artifact/com.github.tomakehurst/wiremock-jre8-standalone
+    testImplementation group: 'com.github.tomakehurst', name: 'wiremock-jre8-standalone', version: '2.35.2'
+
+    // https://mvnrepository.com/artifact/org.wiremock/wiremock
+    // testImplementation group: 'org.wiremock', name: 'wiremock', version: '3.8.0'
+
+    testImplementation 'org.eclipse.jetty:jetty-servlets:11.0.16'
+
+    implementation group: 'com.github.f4b6a3', name: 'ulid-creator', version: '5.2.3'
+
+    // https://mvnrepository.com/artifact/org.apache.httpcomponents.client5/httpclient5
+    implementation group: 'org.apache.httpcomponents.client5', name: 'httpclient5', version: '5.3.1'
+
+    // https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
+    implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.12.0'
+
+    // https://mvnrepository.com/artifact/io.netty/netty-transport
+    implementation group: 'io.netty', name: 'netty-transport', version: '4.1.111.Final'
+    implementation group: 'io.netty', name: 'netty-codec', version: '4.1.111.Final'
+    implementation group: 'io.netty', name: 'netty-handler', version: '4.1.111.Final'
+
+    // IDN stuff
+    // https://mvnrepository.com/artifact/com.ibm.icu/icu4j
+    implementation group: 'com.ibm.icu', name: 'icu4j', version: '75.1'
+
+    implementation 'dnsjava:dnsjava:3.3.1'
+
+    // https://mvnrepository.com/artifact/com.hubspot/NioSmtpClient
+    implementation 'com.hubspot:NioSmtpClient:1.2.0'
+
+//    implementation 'com.github.pemistahl:lingua:1.1.0'
+    implementation 'com.github.pemistahl:lingua:1.2.2'
+
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.10.0")
+
+    // caching
+    // used by RateLimiter
+    implementation 'com.github.ben-manes.caffeine:caffeine:2.8.2'
+
+    //implementation 'javax.cache:cache-api:1.1.1'
+
+    // https://mvnrepository.com/artifact/org.ehcache/ehcache
+    //implementation group: 'org.ehcache', name: 'ehcache' , version: '3.10.8'
+
+    // https://mvnrepository.com/artifact/javax.cache/cache-api
+    //implementation group: 'javax.cache', name: 'cache-api'     , version: '1.1.1'
+
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

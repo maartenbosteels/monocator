@@ -1,0 +1,469 @@
+<!doctype html>
+<!--suppress HtmlRequiredLangAttribute -->
+<html th:lang="|${#locale.language}-${#locale.country}|"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <link rel="stylesheet" th:href="@{/css/pico.min.css}">
+    <link rel="stylesheet" th:href="@{/css/pico.colors.min.css}">
+    <link rel="stylesheet" th:href="@{/css/application.css}">
+
+    <title>Mercator | Search 123</title>
+
+</head>
+<body>
+
+    <div class="sticky_hero  pico-background-sand-50 container-fluid"  >
+        <nav class="container-fluid">
+
+            <ul >
+                <li >
+                    <h2 class="pico-color-sand-650">
+
+<!--                        style="padding-bottom: 20px"-->
+
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Mercator.jpg/174px-Mercator.jpg"
+                             alt="Portrait of Gerardus Mercator"
+                             width="30px"
+                             style="padding-top: 0"
+                             class="mercator-portrait"
+                        />
+                        <svg class="mercator-icon"
+                                width="32px" height="32px" stroke-width="1.5" viewBox="0 0 24 24" fill="none"
+                             xmlns="http://www.w3.org/2000/svg" color="#413030">
+                            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                                  stroke="#413030" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            </path>
+                            <path d="M2.5 12.5L8 14.5L7 18L8 21"
+                                  stroke="#413030" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            </path>
+                            <path d="M17 20.5L16.5 18L14 17V13.5L17 12.5L21.5 13"
+                                  stroke="#413030" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            </path>
+                            <path d="M19 5.5L18.5 7L15 7.5V10.5L17.5 9.5H19.5L21.5 10.5"
+                                  stroke="#413030" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            </path>
+                            <path d="M2.5 10.5L5 8.5L7.5 8L9.5 5L8.5 3"
+                                  stroke="#413030" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            </path>
+                        </svg>
+                        Mercator
+                    </h2>
+                </li>
+            </ul>
+            <ul>
+    <!--            role="button"-->
+                <li><a  href="#">Search</a></li>
+                <li><a  href="#">Submit work</a></li>
+                <li><a  href="#">Status</a></li>
+                <li><a  href="#">Settings</a></li>
+                <li></li>
+            </ul>
+
+        </nav>
+
+<!--        <blockquote>-->
+<!--            “We propose”-->
+<!--&lt;!&ndash;            “We propose with regard to the different parts of the world to treat, successively, particular regions more broadly,&ndash;&gt;-->
+<!--&lt;!&ndash;            as we are already doing with Europe, and you may soon expect a universal map, which will not be inferior to that of Ptolemy.”&ndash;&gt;-->
+<!--            <footer>-->
+<!--                <cite>— Gerardus Mercator, 1538</cite>-->
+<!--            </footer>-->
+<!--        </blockquote>-->
+<!--        <p>I began to have doubts about the truth of all philosophers</p>-->
+    </div>
+
+<main class="container overflow-auto">
+<!--    class="overflow-auto"-->
+    <div >
+    <h3>Search visits 123</h3>
+
+<!--        <form role="search">-->
+<!--            <input type="search" name="search" aria-label="Enter a domain name to search for visits">-->
+<!--            <input type="submit" value="Search" class="search">-->
+<!--        </form>-->
+
+
+    <div class="sticky_search_form">
+<!--        method="post"-->
+<!--        role="search"-->
+        <form id="search-form"  role="search" class="sticky_search_form">
+<!--            role="group"-->
+<!--            <fieldset >-->
+<!--                <div class="xgrid remove-the-x-to-have-button-next-to-search-input">-->
+                        <input type="search" name="search"
+                               aria-label="Search" placeholder="Enter a domain name"
+                                >
+                        <input type="submit" value="Search" class="search">
+<!--                </div>-->
+<!--            </fieldset>-->
+
+        </form>
+    </div>
+
+    <h3>Visits for abc.be</h3>
+
+    <div>
+        <table>
+            <thead>
+                <tr>
+                    <td>Date</td>
+                    <td>DNS requests</td>
+                    <td>SMTP conversations</td>
+
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><a href="#">2023-12-26</a></td>
+                    <td>5</td>
+                    <td>3</td>
+                </tr>
+                <tr>
+                    <td><a href="#">2024-03-11</a></td>
+                    <td>15</td>
+                    <td>0</td>
+                </tr>
+                <tr>
+                    <td><a href="#">2024-04-11</a></td>
+                    <td>15</td>
+                    <td>0</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h1>Visit details</h1>
+
+    <details class="container-fluid">
+        <summary role="button" class="outline">HTTP</summary>
+
+        <article>
+            <header>www.abc.be</header>
+            <table>
+                <tr>
+                    <th scope="row">URL</th>
+<!--                    <td>URL</td>-->
+                    <td>http://www.abc.be</td>
+                </tr>
+                <tr>
+                    <th><strong>OK</strong></th>
+                    <td>True</td>
+                </tr>
+                <tr>
+                    <td>Problem</td>
+                    <td>n/a</td>
+                </tr>
+            </table>
+
+            <table >
+                <thead>
+                <tr>
+                    <td>Prefix</td>
+                    <td>Request Type</td>
+                    <td>Response</td>
+
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td><a href="#">2023-12-26</a></td>
+                    <td>5</td>
+                    <td>3</td>
+                </tr>
+                <tr>
+                    <td><a href="#">2024-03-11</a></td>
+                    <td>15</td>
+                    <td>0</td>
+                </tr>
+                <tr>
+                    <td><a href="#">2024-04-11</a></td>
+                    <td>15</td>
+                    <td>0</td>
+                </tr>
+                </tbody>
+
+            </table>
+
+        </article>
+
+    </details>
+    <details class="container-fluid">
+        <summary role="button" class="outline">HTML Features</summary>
+
+        <article>
+            <header>www.abc.be</header>
+            <table>
+                <tr>
+                    <th scope="row">URL</th>
+                    <td>http://www.abc.be</td>
+                </tr>
+                <tr>
+                    <th><strong>OK</strong></th>
+                    <td>True</td>
+                </tr>
+                <tr>
+                    <td>Problem</td>
+                    <td>n/a</td>
+                </tr>
+
+                <tr>
+                    <th>Body text</th>
+                    <td>
+                        <details>
+                            <summary>More info</summary>
+                            Home Abcservices.eu . NL ZH EN Search ... Toggle Navigation Home About us Mission History Our services Marketing support Location & Facilitation Merger & Acquisitions References Internships Contact us Contact us Prev Next You are here: Home Back to Top © 2023 Abcservices.eu
+                        </details>
+                    </td>
+                </tr>
+
+            </table>
+
+
+        </article>
+
+
+    </details>
+    <details class="container-fluid">
+        <summary role="button" class="outline">DNS</summary>
+
+        <table >
+            <thead>
+            <tr>
+                <td>Prefix</td>
+                <td>Request Type</td>
+                <td>Response</td>
+
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><a href="#">2023-12-26</a></td>
+                <td>5</td>
+                <td>3</td>
+            </tr>
+            <tr>
+                <td><a href="#">2024-03-11</a></td>
+                <td>15</td>
+                <td>0</td>
+            </tr>
+            <tr>
+                <td><a href="#">2024-04-11</a></td>
+                <td>15</td>
+                <td>0</td>
+            </tr>
+            </tbody>
+
+        </table>
+
+
+    </details>
+
+
+    <details class="container-fluid">
+        <summary role="button" class="outline">SMTP</summary>
+
+        <article>
+            <header>dnsbelgium-be.mail.protection.outlook.com</header>
+            <table>
+                <tr>
+                    <td>IP</td>
+                    <td>Response</td>
+                </tr>
+                <tr>
+                    <td>129.2.2.5</td>
+                    <td>ehlo jkjkjkjk</td>
+                </tr>
+                <tr>
+                    <td>129.2.2.5</td>
+                    <td>
+                        <details>
+                            <summary role="button" class="secondary">Conversation</summary>
+                            <table>
+                                <tr>
+                                    <td>ASN</td>
+                                    <td>Country</td>
+                                </tr>
+                                <tr>
+                                    <td>8075</td>
+                                    <td>NL</td>
+                                </tr>
+                            </table>
+
+                        </details>
+                    </td>
+                </tr>
+            </table>
+        </article>
+        <article>
+            <header>dnsbelgium-be.mail.protection.outlook.com</header>
+            <table>
+                <tr>
+                    <td>IP</td>
+                    <td>Response</td>
+                </tr>
+                <tr>
+                    <td>129.2.2.5</td>
+                    <td>ehlo jkjkjkjk</td>
+                </tr>
+                <tr>
+                    <td>129.2.2.5</td>
+                    <td>
+                        <details>
+                            <summary role="button" class="secondary">Conversation</summary>
+                            <table>
+                                <tr>
+                                    <td>ASN</td>
+                                    <td>Country</td>
+                                </tr>
+                                <tr>
+                                    <td>8075</td>
+                                    <td>NL</td>
+                                </tr>
+                            </table>
+
+                        </details>
+                    </td>
+                </tr>
+            </table>
+        </article>
+    </details>
+
+    <details class="container-fluid">
+        <summary role="button" class="outline">VAT</summary>
+        <table>
+            <tr>
+                <td>Timestamp</td>
+                <td>2024-02-12</td>
+            </tr>
+            <tr>
+                <td>VAT number found</td>
+                <td>BE0466158640</td>
+            </tr>
+            <tr>
+                <td>Matching URL	</td>
+                <td>https://www.dnsbelgium.be/en/contact</td>
+            </tr>
+            <tr>
+                <td># URLs followed	</td>
+                <td>4</td>
+            </tr>
+            <tr>
+                <td>URLs followed	</td>
+                <td>
+                    <ul class="mt-2 no-bullet pl-0">
+                        <li class="mt-1">http://www.dnsbelgium.be/</li>
+                        <li class="mt-1">https://www.dnsbelgium.be/</li>
+                        <li class="mt-1">https://www.dnsbelgium.be/en</li>
+                        <li class="mt-1">https://www.dnsbelgium.be/en/contact</li>
+                    </ul>
+                </td>
+            </tr>
+
+        </table>
+    </details>
+
+
+
+    <details class="container-fluid">
+        <summary role="button" class="outline">TLS</summary>
+
+        <article>
+            <header>dnsbelgium.be</header>
+            <table class="table table-sm table-borderless striped">
+                <tbody><tr><th>Host name</th><td>www.dnsbelgium.be</td></tr><tr><th>Crawl timestamp</th><td>10/08/2024 10:04:42</td></tr><tr><th>Host name matches certificate</th><td>Yes</td></tr><tr><th>Scan timestamp</th><td>10/08/2024 10:04:42</td></tr><tr><th>Scanned ip</th><td>45.60.74.42</td></tr><tr><th>Scan server name</th><td>www.dnsbelgium.be</td></tr><tr><th>Scan connect ok</th><td>Yes</td></tr></tbody></table>
+        </article>
+
+        <article>
+            <header>www.dnsbelgium.be</header>
+            <table class="table table-sm table-borderless">
+                <tbody><tr><th>Host name</th><td>www.dnsbelgium.be</td></tr><tr><th>Crawl timestamp</th><td>10/08/2024 10:04:42</td></tr><tr><th>Host name matches certificate</th><td>Yes</td></tr><tr><th>Scan timestamp</th><td>10/08/2024 10:04:42</td></tr><tr><th>Scanned ip</th><td>45.60.74.42</td></tr><tr><th>Scan server name</th><td>www.dnsbelgium.be</td></tr><tr><th>Scan connect ok</th><td>Yes</td></tr></tbody></table>
+        </article>
+
+<!--        <details>-->
+<!--            <summary class="container-fluid">dnsbelgium.be</summary>-->
+
+<!--            <table class="table table-sm table-borderless"><tbody><tr><th>Host name</th><td>www.dnsbelgium.be</td></tr><tr><th>Crawl timestamp</th><td>10/08/2024 10:04:42</td></tr><tr><th>Host name matches certificate</th><td>Yes</td></tr><tr><th>Scan timestamp</th><td>10/08/2024 10:04:42</td></tr><tr><th>Scanned ip</th><td>45.60.74.42</td></tr><tr><th>Scan server name</th><td>www.dnsbelgium.be</td></tr><tr><th>Scan connect ok</th><td>Yes</td></tr></tbody></table>-->
+<!--        </details>-->
+
+<!--        <details>-->
+<!--            <summary class="container-fluid">www.dnsbelgium.be</summary>-->
+
+<!--            <table class="table table-sm table-borderless">-->
+<!--                <tbody><tr><th>Host name</th><td>www.dnsbelgium.be</td></tr><tr><th>Crawl timestamp</th><td>10/08/2024 10:04:42</td></tr><tr><th>Host name matches certificate</th><td>Yes</td></tr><tr><th>Scan timestamp</th><td>10/08/2024 10:04:42</td></tr><tr><th>Scanned ip</th><td>45.60.74.42</td></tr><tr><th>Scan server name</th><td>www.dnsbelgium.be</td></tr><tr><th>Scan connect ok</th><td>Yes</td></tr></tbody></table>-->
+<!--        </details>-->
+
+    </details>
+
+    <h2>More information</h2>
+
+    <div>
+        <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. In sodales felis vitae ante finibus volutpat. Nunc egestas ullamcorper metus, ut fermentum nulla euismod eget. Quisque blandit ligula non nulla feugiat, sed sollicitudin ante rhoncus. Nam blandit dolor ac leo ultricies tristique. Donec finibus felis a maximus accumsan. Phasellus ac consectetur sem. Vivamus quis neque nisl. Nam sit amet vehicula sem. Etiam egestas sapien arcu, a dignissim nisi lobortis vitae. Integer tempus nisi sed feugiat condimentum. In efficitur ante ut rutrum facilisis. Sed venenatis faucibus lectus eu mattis.
+
+        Cras a molestie ligula, et varius mauris. Aenean faucibus id arcu nec cursus. Aenean at laoreet orci. Nunc eget sollicitudin mi. Nam finibus urna dolor, eu accumsan metus lacinia non. Fusce pulvinar justo nec augue aliquet pharetra. Phasellus vulputate hendrerit metus non rutrum. Pellentesque gravida, metus sed dignissim bibendum, tortor ipsum dapibus ante, eget rutrum dolor eros quis felis. Nulla eleifend ornare volutpat.
+        Vestibulum rhoncus at sem nec feugiat. Nulla fringilla, tortor vitae gravida ornare, diam urna malesuada tellus, ac aliquet sem tellus non lorem. Nunc iaculis sollicitudin ex et laoreet. Cras ac fringilla odio, id feugiat mi. Donec lacinia volutpat tellus eget faucibus. Morbi lacus magna, tincidunt consectetur ipsum non, eleifend mollis felis. Maecenas eu pharetra libero. Pellentesque vel gravida enim.
+        </p>
+
+        <h3>This is main layout footer h3</h3>
+
+        Vestibulum rhoncus at sem nec feugiat. Nulla fringilla, tortor vitae gravida ornare, diam urna malesuada tellus, ac aliquet sem tellus non lorem. Nunc iaculis sollicitudin ex et laoreet. Cras ac fringilla odio, id feugiat mi. Donec lacinia volutpat tellus eget faucibus. Morbi lacus magna, tincidunt consectetur ipsum non, eleifend mollis felis. Maecenas eu pharetra libero. Pellentesque vel gravida enim.
+
+        Pellentesque eget bibendum nulla, nec gravida mi. Vivamus et magna at sem finibus laoreet. Suspendisse potenti. Suspendisse ut rutrum quam. Fusce dignissim neque nisi, sed euismod felis maximus a. Vestibulum tristique mauris vel molestie gravida. Phasellus sit amet nibh mauris. Pellentesque fringilla iaculis ex, ac pharetra enim venenatis ut. Proin sollicitudin libero et lacus feugiat, vitae imperdiet sem fermentum. Nullam finibus sem ac nisi semper, eget hendrerit tortor pellentesque. Morbi mollis risus ex, at pretium elit mattis at.
+
+
+    </div>
+
+    </div>
+
+</main>
+
+<footer class="container">
+    <h6>About Mercator</h6>
+
+    <a href="/hello">Home</a>
+
+    <h6>Testing HTMX</h6>
+
+    <div>
+        <a href="/hello_htmx" hx-target="#now">hello htmx</a>
+    </div>
+
+    <p>
+        <button th:hx-get="@{/hello_htmx}" hx-target="#message">CLick me</button>
+    </p>
+
+    <article>
+        Message:
+        <div id="message">
+            Hello World
+        </div>
+
+    </article>
+
+    <div id="now">
+
+    </div>
+
+    <p>
+        The source code of Mercator is available at <a href="https://github.com/DNSBelgium/mercator">Github</a>
+    </p>
+
+
+
+</footer>
+
+<script type="text/javascript" th:src="@{/webjars/htmx.org/dist/htmx.min.js}"></script>
+<th:block layout:fragment="script-content">
+
+</th:block>
+
+</body>
+</html>
+
+
+
