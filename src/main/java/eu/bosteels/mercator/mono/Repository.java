@@ -207,7 +207,6 @@ public class Repository {
         };
     }
 
-
     public static Timestamp timestamp(ZonedDateTime zonedDateTime) {
         if (zonedDateTime == null) {
             return null;

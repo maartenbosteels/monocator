@@ -16,7 +16,9 @@ import be.dnsbelgium.mercator.vat.domain.Link;
 import be.dnsbelgium.mercator.vat.domain.Page;
 import be.dnsbelgium.mercator.vat.domain.SiteVisit;
 import com.github.f4b6a3.ulid.Ulid;
+import lombok.Getter;
 import lombok.Setter;
+import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -69,11 +71,11 @@ public class VisitRepository {
   private boolean persistBodyText = false;
 
   @Value("${visits.export.directory}")
-  @Setter
+  @Setter @Getter
   private File exportDirectory;
 
   @Value("${visits.database.directory}")
-  @Setter
+  @Setter @Getter
   private File databaseDirectory;
 
   @Value("${visits.database.deleteAfterExport:true}")
@@ -96,20 +98,32 @@ public class VisitRepository {
     newDatabase();
   }
 
+  @SneakyThrows
   private void makeDatabaseDirectory() {
     if (databaseDirectory == null) {
-      logger.warn("databaseDirectory == null => not initializing it");
-    } else {
-      mkDir(databaseDirectory);
+      databaseDirectory = new File(System.getProperty("user.home"));
+      logger.warn("databaseDirectory not set => using {}", databaseDirectory);
     }
+    FileUtils.forceMkdir(databaseDirectory);
   }
 
+  @SneakyThrows
   private void makeExportDirectory() {
     if (exportDirectory == null) {
-      logger.warn("exportDirectory == null => not initializing it");
-    } else {
-      mkDir(exportDirectory);
+      exportDirectory = new File(System.getProperty("user.home"));
+      logger.warn("exportDirectory not set => using {}", exportDirectory);
     }
+    FileUtils.forceMkdir(exportDirectory);
+  }
+
+  @Transactional
+  public List<String> getTableNames() {
+    attachAndUse();
+    return jdbcClient
+        .sql("select table_name from information_schema.tables where table_type = 'BASE TABLE' and table_catalog = ? ")
+        .param(databaseName)
+        .query(String.class)
+        .list();
   }
 
   @Transactional
