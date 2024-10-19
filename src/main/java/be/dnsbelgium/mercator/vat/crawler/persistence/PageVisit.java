@@ -11,16 +11,11 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @ToString
+@EqualsAndHashCode
 public class PageVisit {
-
-  @Setter
-  private Long id;
 
   private final String visitId;
   private final String domainName;
-
-  // according to https://stackoverflow.com/questions/6627289/what-is-the-most-recommended-way-to-store-time-in-postgresql-using-java
-  // we should use java.time.Instant and TIMESTAMPTZ to store timestamps in Postgres
 
   Instant crawlStarted;
   Instant crawlFinished;

@@ -83,13 +83,13 @@ public class TableCreator {
         var ddl_request = """
                 create table if not exists dns_request
                 (
-                    id               long                     primary key,
+                    id               varchar(26)              primary key,
                     visit_id         varchar(26)              not null,
                     domain_name      varchar(128)             not null,
                     prefix           varchar(63)              not null,
                     record_type      char(10)                 not null,
                     rcode            integer,
-                    crawl_timestamp  timestamp with time zone not null,
+                    crawl_timestamp  timestamp                not null,
                     ok               boolean,
                     problem          text,
                     num_of_responses integer                  not null
@@ -99,8 +99,8 @@ public class TableCreator {
         var ddl_response = """
                 create table if not exists dns_response
                 (
-                    id                  long            primary key,
-                    dns_request         long            not null,
+                    id                  varchar         primary key,
+                    dns_request         varchar         not null,
                     record_data         text            not null,
                     ttl                 integer
                 )
@@ -109,7 +109,7 @@ public class TableCreator {
         var geo = """
                 create table if not exists response_geo_ips
                 (
-                    dns_response     long,
+                    dns_response     varchar,
                     asn              varchar(255),
                     country          varchar(255),
                     ip               varchar(255),
@@ -124,11 +124,10 @@ public class TableCreator {
         var ddl_web_page_visit = """
                 create table if not exists web_page_visit
                 (
-                    id             bigint                   primary key,
                     visit_id       varchar(26)              not null,
                     domain_name    varchar(255),
-                    crawl_started  timestamp with time zone,
-                    crawl_finished timestamp with time zone,
+                    crawl_started  timestamp,
+                    crawl_finished timestamp,
                     html           text,
                     body_text      text,
                     status_code    integer,
@@ -142,13 +141,12 @@ public class TableCreator {
         var ddl_web_visit = """
                 create table if not exists web_visit
                 (
-                    id             bigint       primary key,
                     visit_id       varchar(26),
                     domain_name    varchar(255),
                     start_url      varchar(255),
                     matching_url   varchar(255),
-                    crawl_started  timestamp with time zone,
-                    crawl_finished timestamp with time zone,
+                    crawl_started  timestamp,
+                    crawl_finished timestamp,
                     visited_urls   varchar[]
                 )
                 """;
@@ -159,9 +157,8 @@ public class TableCreator {
         String ddl_html_features = """
                 create table if not exists html_features
                 (
-                    id                                   bigint                   primary key,
                     visit_id                             varchar(26)              not null,
-                    crawl_timestamp                      timestamp with time zone not null,
+                    crawl_timestamp                      timestamp                not null,
                     domain_name                          varchar(128)             not null,
                     html_length                          bigint,
                     nb_imgs                              integer,
@@ -227,8 +224,8 @@ public class TableCreator {
                     version                  integer      not null,
                     public_key_schema        varchar(256),
                     public_key_length        integer,
-                    not_before               timestamp with time zone,
-                    not_after                timestamp with time zone,
+                    not_before               timestamp,
+                    not_after                timestamp,
                     issuer                   varchar(500),
                     subject                  varchar(500),
                     signature_hash_algorithm varchar(256),
@@ -242,8 +239,8 @@ public class TableCreator {
         var ddl_full_scan = """
                 create table if not exists tls_full_scan
                 (
-                    id                        integer not null            primary key,
-                    crawl_timestamp           timestamp with time zone    not null,
+                    id                        varchar                     primary key,
+                    crawl_timestamp           timestamp                   not null,
                     ip                        varchar(255),
                     server_name               varchar(128)                not null,
                     connect_ok                boolean                     not null,
@@ -280,11 +277,10 @@ public class TableCreator {
         var ddl_tls_crawl_result = """
                 create table if not exists tls_crawl_result
                 (
-                    id                             bigint                          primary key,
                     visit_id                       varchar(26)                     not null,
                     domain_name                    varchar(128)                    not null,
-                    crawl_timestamp                timestamp with time zone        not null,
-                    full_scan                      integer                         not null  references tls_full_scan,
+                    crawl_timestamp                timestamp                       not null,
+                    full_scan                      varchar                         not null  references tls_full_scan,
                     host_name_matches_certificate  boolean,
                     host_name                      varchar(128)                    not null,
                     leaf_certificate               varchar(256),

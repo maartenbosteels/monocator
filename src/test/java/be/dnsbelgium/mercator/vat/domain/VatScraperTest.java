@@ -8,6 +8,7 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -19,7 +20,6 @@ import java.io.IOException;
 import java.util.List;
 
 import lombok.SneakyThrows;
-import org.testcontainers.shaded.org.apache.commons.lang3.StringUtils;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;

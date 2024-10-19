@@ -1,7 +1,5 @@
-package be.dnsbelgium.mercator.common.messaging.idn;
+package be.dnsbelgium.mercator.idn;
 
-import be.dnsbelgium.mercator.idn.IDN2008;
-import be.dnsbelgium.mercator.idn.IdnException;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

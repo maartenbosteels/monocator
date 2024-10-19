@@ -29,6 +29,18 @@ public class DuckDataSource extends AbstractDriverBasedDataSource {
         this.connection = (DuckDBConnection) DriverManager.getConnection(url);
     }
 
+    public DuckDataSource() {
+    }
+
+    public DuckDataSource(String url) {
+        setUrl(url);
+        init();
+    }
+
+    public static DuckDataSource memory() {
+        return new DuckDataSource("jdbc:duckdb:");
+    }
+
     @PreDestroy
     public void close() {
         if (connection != null) {

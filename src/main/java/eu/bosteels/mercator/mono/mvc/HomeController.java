@@ -1,6 +1,7 @@
-package eu.bosteels.mercator.mono;
+package eu.bosteels.mercator.mono.mvc;
 
 import be.dnsbelgium.mercator.common.VisitRequest;
+import eu.bosteels.mercator.mono.scheduling.WorkQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -24,8 +25,8 @@ public class HomeController {
     }
 
     @GetMapping
-    public String index(Model model) {
-        logger.error("index called, model = {}", model);
+    public String index() {
+        logger.info("index called");
         return "index";
     }
 

@@ -16,7 +16,7 @@ public class DataSourceConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(DataSourceConfig.class);
 
-    @Value("${duckdb.datasource.url:jdbc:duckdb:monocator-test.duckdb}")
+    @Value("${duckdb.datasource.url:jdbc:duckdb:monocator.duckdb}")
     private String url;
 
     @Bean
@@ -31,16 +31,6 @@ public class DataSourceConfig {
     @Bean
     public JdbcTransactionManager transactionManager(DataSource dataSource) {
         return new JdbcTransactionManager(dataSource);
-    }
-
-
-    @Bean(name = "insertExecutor")
-    public ThreadPoolTaskExecutor inserter() {
-        ThreadPoolTaskExecutor inserter = new ThreadPoolTaskExecutor();
-        inserter.setCorePoolSize(1);
-        inserter.setMaxPoolSize(1);
-        inserter.setQueueCapacity(100);
-        return inserter;
     }
 
 }

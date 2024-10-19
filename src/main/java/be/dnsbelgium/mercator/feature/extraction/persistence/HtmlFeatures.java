@@ -14,8 +14,6 @@ import java.util.StringJoiner;
 @Builder
 public class HtmlFeatures {
 
-  public Long id;
-
   public String visitId;
   public ZonedDateTime crawlTimestamp;
 
@@ -97,7 +95,6 @@ public class HtmlFeatures {
   @Override
   public String toString() {
     return new StringJoiner(", \n", HtmlFeatures.class.getSimpleName() + "[", "]")
-        .add("id=" + id)
         .add("nb_imgs=" + nb_imgs)
         .add("nb_links_int=" + nb_links_int)
         .add("nb_links_ext=" + nb_links_ext)

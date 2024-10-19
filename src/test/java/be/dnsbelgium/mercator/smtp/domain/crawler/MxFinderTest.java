@@ -3,6 +3,7 @@ package be.dnsbelgium.mercator.smtp.domain.crawler;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.slf4j.Logger;
@@ -16,6 +17,10 @@ import static org.slf4j.LoggerFactory.getLogger;
 @EnabledOnOs(OS.MAC)
 class MxFinderTest {
 
+    private static boolean avoidInternet() {
+        return true;
+    }
+
     private static final Logger logger = getLogger(MxFinderTest.class);
 
     private MxFinder mxFinder;
@@ -26,6 +31,7 @@ class MxFinderTest {
     }
 
     @Test
+    @DisabledIf(value = "avoidInternet", disabledReason="We don't want to rely on the internet during testing")
     public void dnsbelgium() {
         MxLookupResult result = mxFinder.findMxRecordsFor("dnsbelgium.be");
         logger.info("result = {}", result);
@@ -36,6 +42,7 @@ class MxFinderTest {
     }
 
     @Test
+    @DisabledIf(value = "avoidInternet", disabledReason="We don't want to rely on the internet during testing")
     public void nxdomain() {
         MxLookupResult result = mxFinder.findMxRecordsFor("--.be");
         logger.info("result = {}", result);
@@ -75,6 +82,7 @@ class MxFinderTest {
         assertThat(result.getMxRecords().size()).isEqualTo(0);
     }
 
+    @DisabledIf(value = "avoidInternet", disabledReason="We don't want to rely on the internet during testing")
     @Test
     public void manyMxRecords() {
         MxLookupResult result = mxFinder.findMxRecordsFor("kuleuven.be");
@@ -85,6 +93,7 @@ class MxFinderTest {
         assertThat(result.getMxRecords().size()).isGreaterThan(1);
     }
 
+    @DisabledIf(value = "avoidInternet", disabledReason="We don't want to rely on the internet during testing")
     @Test
     public void noMxRecords() {
         MxLookupResult result = mxFinder.findMxRecordsFor("dc3.be");
@@ -95,6 +104,7 @@ class MxFinderTest {
         assertThat(result.getMxRecords().size()).isEqualTo(0);
     }
 
+    @DisabledIf(value = "avoidInternet", disabledReason="We don't want to rely on the internet during testing")
     @Test
     public void idn() {
         MxLookupResult result = mxFinder.findMxRecordsFor("sénat.be");

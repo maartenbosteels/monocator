@@ -1,6 +1,8 @@
 package eu.bosteels.mercator.mono;
 
 import be.dnsbelgium.mercator.DuckDataSource;
+import eu.bosteels.mercator.mono.scheduling.Scheduler;
+import eu.bosteels.mercator.mono.scheduling.WorkQueue;
 import jakarta.jms.ConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

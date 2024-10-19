@@ -15,16 +15,14 @@ import java.util.List;
 @ToString
 public class VatCrawlResult {
 
-  private Long id;
-
   private String visitId;
   private String domainName;
 
   private String startUrl;
   private String matchingUrl;
 
-  Instant crawlStarted;
-  Instant crawlFinished;
+  private Instant crawlStarted;
+  private Instant crawlFinished;
 
   private List<String> vatValues;
   private List<String> visitedUrls;

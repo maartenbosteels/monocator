@@ -25,8 +25,8 @@ import org.apache.commons.lang3.tuple.Pair;
 
 public class DnsResultsRowCallbackHandler implements RowCallbackHandler {
 
-    private Long prev_response_id = null;
-    private Long prev_request_id = null;
+    private String prev_response_id = null;
+    private String prev_request_id = null;
     private Request currentRequest = null;
     private Response currentResponse = null;
 
@@ -45,8 +45,8 @@ public class DnsResultsRowCallbackHandler implements RowCallbackHandler {
 
     @Override
     public void processRow(@NotNull ResultSet rs) throws SQLException {
-        Long response_id = getLong(rs, "response_id");
-        Long request_id = getLong(rs,"request_id");
+        String response_id = rs.getString("response_id");
+        String request_id = rs.getString("request_id");
         System.out.println("request_id = " + request_id + ", response_id = " + response_id);
         String record_data	= rs.getString("record_data");
         Long ttl = getLong(rs, "ttl");

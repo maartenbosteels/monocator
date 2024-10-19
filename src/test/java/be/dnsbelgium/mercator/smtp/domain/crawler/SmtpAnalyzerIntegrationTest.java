@@ -1,46 +1,36 @@
 package be.dnsbelgium.mercator.smtp.domain.crawler;
 
-import be.dnsbelgium.mercator.geoip.GeoIPService;
-import be.dnsbelgium.mercator.smtp.domain.crawler.config.TestContext;
 import be.dnsbelgium.mercator.smtp.persistence.entities.CrawlStatus;
 import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpHost;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.jupiter.api.Disabled;
+import eu.bosteels.mercator.mono.MonocatorApplication;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.slf4j.LoggerFactory.getLogger;
 
-// "Do not run on Jenkins. This test is brittle since it relies on external state"
-// @EnabledOnOs(OS.MAC)
-@Disabled
-@SpringJUnitConfig({
-  TestContext.class,
-  DefaultSmtpIpAnalyzer.class,
-  NioSmtpConversationFactory.class,
-  SmtpAnalyzer.class,
-  MxFinder.class,
-  SimpleMeterRegistry.class})
+// This test is slow (and brittle since it relies on external state)
+@EnabledIfEnvironmentVariable(named = "SMTP_TEST_ENABLED", matches = "True")
+@SpringBootTest(classes = { MonocatorApplication.class } )
+@ActiveProfiles("test")
 class SmtpAnalyzerIntegrationTest {
-
-  @MockBean
-  GeoIPService geoIPService;
 
   @Autowired
   SmtpAnalyzer smtpAnalyzer;
   private static final Logger logger = getLogger(SmtpAnalyzerIntegrationTest.class);
 
+
   @Test
   public void dnsbelgium() throws Exception {
     logger.info("cachingSmtpCrawler = {}", smtpAnalyzer);
     var result = smtpAnalyzer.analyze("dnsbelgium.be");
-    logger.info("result = {}", result);
+    logger.info("dnsbelgium.be => {}", result);
     assertThat(result).isNotNull();
     assertThat(result.getCrawlStatus()).isEqualTo(CrawlStatus.OK);
     assertThat(result.getDomainName()).isEqualTo("dnsbelgium.be");
@@ -56,13 +46,11 @@ class SmtpAnalyzerIntegrationTest {
   }
 
   @Test
-  public void abc() throws Exception {
-    logger.info("cachingSmtpCrawler = {}", smtpAnalyzer);
+  public void anotherDomain() throws Exception {
     var result = smtpAnalyzer.analyze("bosteels.eu");
-    logger.info("result = {}", result);
+    logger.info("bosteels.eu => {}", result);
     assertThat(result).isNotNull();
     assertThat(result.getCrawlStatus()).isEqualTo(CrawlStatus.OK);
-    //assertThat(result.getDomainName()).isEqualTo("abc.be");
     assertThat(result.getTimestamp()).isNotNull();
     List<SmtpHost> hosts = result.getHosts();
     assertThat(hosts.size()).isGreaterThan(0);

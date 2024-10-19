@@ -14,11 +14,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class VisitDatabaseTest {
 
-//    @TempDir
-//    File tempDir;
-
-    // use this location if you want to manually inspect the results
-    File tempDir = new File(System.getProperty("user.home") + "/test_mono/");
+    @TempDir
+    File tempDir;
 
     private static final Logger logger = LoggerFactory.getLogger(VisitDatabaseTest.class);
 
@@ -34,31 +31,12 @@ class VisitDatabaseTest {
     }
 
     @Test
-    public void queries() throws IOException {
-        VisitDatabase db = new VisitDatabase(
-                new File(tempDir, "test.duck.db"),
-                new File(tempDir, "test.exports"),
-                5, true
-        );
-        logger.info("db = {}", db);
-        db.init();
-        db.doInTransaction(jdbcTemplate -> {
-            var list = jdbcTemplate.queryForList("show all tables");
-            logger.info("list = {}", list);
-            var settings = jdbcTemplate.queryForList("SELECT * FROM duckdb_settings()");
-            logger.info("settings = {}", settings);
-            return settings;
-        });
-    }
-
-    @Test
     public void secondDbAfterExport() throws IOException {
         VisitDatabase db = new VisitDatabase(
                 new File(tempDir, "test.duck.db"),
                 new File(tempDir, "test.exports"),
                 2, true
         );
-        logger.info("db = {}", db);
         db.init();
         List<Map<String, Object>> tables =  db.doInTransaction(jdbcTemplate -> {
             jdbcTemplate.execute("create table tx1(id int)");

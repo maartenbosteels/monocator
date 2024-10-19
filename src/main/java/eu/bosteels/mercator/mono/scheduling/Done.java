@@ -1,4 +1,4 @@
-package eu.bosteels.mercator.mono;
+package eu.bosteels.mercator.mono.scheduling;
 
 import java.time.Instant;
 

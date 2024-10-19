@@ -1,4 +1,4 @@
-package eu.bosteels.mercator.mono;
+package eu.bosteels.mercator.mono.mvc;
 
 public record Stats(
         long todo,

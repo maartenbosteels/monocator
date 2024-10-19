@@ -1,6 +1,7 @@
-package eu.bosteels.mercator.mono;
+package eu.bosteels.mercator.mono.scheduling;
 
 import be.dnsbelgium.mercator.common.VisitRequest;
+import eu.bosteels.mercator.mono.MainCrawler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jms.annotation.JmsListener;

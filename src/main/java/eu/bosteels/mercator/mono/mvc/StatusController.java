@@ -1,5 +1,7 @@
-package eu.bosteels.mercator.mono;
+package eu.bosteels.mercator.mono.mvc;
 
+import eu.bosteels.mercator.mono.Repository;
+import eu.bosteels.mercator.mono.VisitRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;

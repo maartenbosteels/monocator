@@ -1,4 +1,4 @@
-package eu.bosteels.mercator.mono;
+package eu.bosteels.mercator.mono.scheduling;
 
 import be.dnsbelgium.mercator.common.VisitRequest;
 import org.slf4j.Logger;
@@ -25,8 +25,6 @@ public class WorkQueue {
     // that are in progress.
     private final Set<String> visitsInQueue = ConcurrentHashMap.newKeySet();
 
-    private boolean started = false;
-
     public WorkQueue(JmsTemplate jmsTemplate) {
         this.jmsTemplate = jmsTemplate;
     }
@@ -41,7 +39,7 @@ public class WorkQueue {
 
     public void add(VisitRequest visitRequest) {
         if (visitsInQueue.contains(visitRequest.getVisitId())) {
-            logger.info("Visit {} already in the queue, not adding again.", visitRequest.getVisitId());
+            logger.debug("Visit {} already in the queue, not adding again.", visitRequest.getVisitId());
             return;
         }
         jmsTemplate.convertAndSend("visit_requests", visitRequest);

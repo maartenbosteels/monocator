@@ -8,12 +8,12 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.slf4j.Logger;
-import org.testcontainers.shaded.org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -35,8 +35,13 @@ class PageFetcherTest {
     return true;
   }
 
+  private static boolean avoidInternet() {
+    return true;
+  }
 
 
+
+  @DisabledIf(value = "avoidInternet", disabledReason="We don't want to rely on the internet during testing")
   @Test
   public void fetchGoogle() throws IOException {
     HttpUrl url = HttpUrl.get("http://www.google.be");
@@ -60,17 +65,10 @@ class PageFetcherTest {
   public void visitDuration() throws IOException {
     Page page = pageFetcher.fetch(HttpUrl.get("http://httpbin.org/delay/0.5"));
     Instant started = page.getVisitStarted();
-    Instant finshed = page.getVisitFinished();
-    Duration duration = Duration.between(started, finshed);
+    Instant finished = page.getVisitFinished();
+    Duration duration = Duration.between(started, finished);
     logger.info("page.getVisitDuration = {}", duration);
     assertThat(duration.toMillis()).isBetween(500L, 2000L);
-  }
-
-  @Test
-  @DisabledIf(value = "isHttpbinDisabled", disabledReason="Tests using HttpBin are disabled (sometimes it is very slow")
-  public void statusCode() throws IOException {
-    Page page = pageFetcher.fetch(HttpUrl.get("http://httpbin.org/status/599"));
-    assertThat(page.getStatusCode()).isEqualTo(599);
   }
 
   @Test
@@ -79,28 +77,36 @@ class PageFetcherTest {
         () -> pageFetcher.fetch(HttpUrl.get("http://no.webserver.at.this.url")));
   }
 
-  @Test
-  public void test404() throws IOException {
-    HttpUrl url = HttpUrl.get("http://www.dnsbelgium.be/this page does not exist");
-    Page page = pageFetcher.fetch(url);
-    logger.info("page = {}", page);
-    logger.info("page.statusCode = {}", page.getStatusCode());
-    assertThat(page.getStatusCode()).isEqualTo(404);
-    assertThat(page.getDocument().text()).isNotBlank();
-  }
+//  @Test
+//  public void test404() throws IOException {
+//    var path = "/this-page-returns-404";
+//    var body = "hello, I am a 404";
+//    client
+//            .when(request().withPath(path))
+//            .respond(response()
+//                            .withStatusCode(404)
+//                            .withBody(body)
+//            );
+//    Page page = pageFetcher.fetch(url(path));
+//    logger.info("page = {}", page);
+//    logger.info("page.statusCode = {}", page.getStatusCode());
+//    assertThat(page.getStatusCode()).isEqualTo(404);
+//    assertThat(page.getDocument().text()).isEqualTo(body);
+//  }
+//
+//  @Test
+//  public void close() throws IOException {
+//    client.when(request().withPath("/")).respond(response().withStatusCode(200));
+//    Page page = pageFetcher.fetch(url("/"));
+//    assertThat(page.getStatusCode()).isEqualTo(200);
+//    pageFetcher.close();
+//    // a fetch call will now throw an IllegalStateException
+//    assertThrows(IllegalStateException.class,
+//        () -> pageFetcher.fetch(url("/")));
+//  }
 
   @Test
-  public void close() throws IOException {
-    HttpUrl url = HttpUrl.get("http://www.google.com/");
-    Page page = pageFetcher.fetch(url);
-    assertThat(page.getStatusCode()).isEqualTo(200);
-    pageFetcher.close();
-    // a fetch call will now throw an IllegalStateException
-    assertThrows(IllegalStateException.class,
-        () -> pageFetcher.fetch(url));
-  }
-
-  @Test
+  @DisabledIf(value = "avoidInternet", disabledReason="We don't want to rely on the internet during testing")
   public void fetchPdf() throws IOException {
     String url = "https://assets.dnsbelgium.be/attachment/Wijziging-gemachtigde-DomainGuard-nl_0.pdf";
     Page page = pageFetcher.fetch(HttpUrl.get(url));
@@ -182,6 +188,7 @@ class PageFetcherTest {
 
   @Test
   @DisplayName("http://www.dnsbelgium.com/")
+  @DisabledIf(value = "avoidInternet", disabledReason="We don't want to rely on the internet during testing")
   public void http_dnsbelgium_dot_com() throws IOException {
     Page page = pageFetcher.fetch(HttpUrl.get("http://www.dnsbelgium.com/"));
     logger.info("page = {}", page);

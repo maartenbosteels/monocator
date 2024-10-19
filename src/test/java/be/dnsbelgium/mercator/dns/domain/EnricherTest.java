@@ -6,13 +6,14 @@ import be.dnsbelgium.mercator.dns.persistence.Request;
 import be.dnsbelgium.mercator.dns.persistence.ResponseGeoIp;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.metrics.CompositeMeterRegistryAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.net.InetAddress;
@@ -28,7 +29,7 @@ import static org.mockito.Mockito.when;
 @TestPropertySource(properties = {"crawler.dns.geoIP.enabled=true"})
 class EnricherTest {
 
-  @MockBean
+  @MockitoBean
   GeoIpEnricher geoIpEnricher;
 
   @Autowired Enricher enricher;
@@ -43,6 +44,13 @@ class EnricherTest {
     assertThat(enricher.shouldEnrich(of(RecordType.TXT))).isFalse();
   }
 
+  private static boolean avoidInternet() {
+    return true;
+  }
+
+
+
+  @DisabledIf(value = "avoidInternet", disabledReason="We don't want to rely on the internet during testing")
   @Test
   public void enrich() {
     ResponseGeoIp enriched1 = new ResponseGeoIp(Pair.of(20400L, "Google ASN"), "BE", 4, "1.2.3.4");
@@ -51,9 +59,9 @@ class EnricherTest {
             .thenReturn(enriched1)
             .thenReturn(enriched2);
     List<ResponseGeoIp> geoIpList = enricher.enrich("www.google.be");
-    logger.info("geoIpList = " + geoIpList);
+    logger.info("geoIpList = {}", geoIpList);
     for (ResponseGeoIp geoIp : geoIpList) {
-      logger.info("geoIp = " + geoIp);
+      logger.info("geoIp = {}", geoIp);
       assertThat(geoIp).isIn(enriched1, enriched2);
     }
     assertThat(geoIpList).containsExactly(enriched1, enriched2);

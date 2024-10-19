@@ -3,7 +3,7 @@ package be.dnsbelgium.mercator.feature.extraction;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-@Disabled // until we can solve the OOM
+@Disabled // TODO solve the OOM
 class MercatorLanguageDetectorTest {
 
     @Test

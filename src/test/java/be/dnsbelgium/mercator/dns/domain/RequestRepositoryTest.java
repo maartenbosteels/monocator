@@ -45,6 +45,8 @@ class RequestRepositoryTest {
 
     request.setResponses(List.of(r1, r2));
 
+    // TODO: re-enable asserts with new Repository implementation
+
     //requestRepository.save(request);
     //List<Request> requests = requestRepository.findByVisitId(visitId);
 

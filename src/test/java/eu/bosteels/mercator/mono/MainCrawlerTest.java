@@ -1,7 +1,6 @@
 package eu.bosteels.mercator.mono;
 
 import be.dnsbelgium.mercator.common.VisitRequest;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.slf4j.Logger;
@@ -10,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+@SuppressWarnings("CommentedOutCode")
 @SpringBootTest(classes = { MonocatorApplication.class })
 @ActiveProfiles({"test", "local"})
 @EnabledIfEnvironmentVariable(named = "MainCrawlerTest.enabled", matches = "true")
@@ -23,13 +23,12 @@ class MainCrawlerTest {
     @Test
     public void dnsbelgium_be() {
         logger.info("true = " + true);
-        logger.info("mainCrawler = " + mainCrawler);
+        logger.info("mainCrawler = {}", mainCrawler);
         VisitRequest dnsbelgium = new VisitRequest("dnsbelgium.be");
         mainCrawler.visit(dnsbelgium);
     }
 
     @Test
-    @Disabled // takes 12 secs
     public void idn() {
         VisitRequest request = new VisitRequest("gasheizkörper.de");
         mainCrawler.visit(request);
@@ -41,10 +40,6 @@ class MainCrawlerTest {
 //        mainCrawler.vat(dnsbelgium);
 //    }
 
-    @Test
-    public void doNothing() {
-    }
-
 //    @Test
 //    public void dnsVisit() {
 //        mainCrawler.dnsVisit();
@@ -55,8 +50,5 @@ class MainCrawlerTest {
 //        mainCrawler.smtp();
 //    }
 
-
-//        Ulid ulid = UlidCreator.getMonotonicUlid();
-//        ulid.toString();
 
 }

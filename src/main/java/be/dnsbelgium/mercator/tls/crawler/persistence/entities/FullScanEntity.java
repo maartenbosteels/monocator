@@ -13,7 +13,7 @@ import java.time.ZonedDateTime;
 public class FullScanEntity {
 
   @Setter
-  private Long id;
+  private String id;
 
   private ZonedDateTime crawlTimestamp;
 

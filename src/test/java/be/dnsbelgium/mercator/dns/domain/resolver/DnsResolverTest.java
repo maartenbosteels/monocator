@@ -1,6 +1,7 @@
 package be.dnsbelgium.mercator.dns.domain.resolver;
 
 import be.dnsbelgium.mercator.dns.dto.*;
+import org.bouncycastle.util.IPAddress;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -10,7 +11,6 @@ import org.springframework.boot.actuate.autoconfigure.metrics.CompositeMeterRegi
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import org.testcontainers.shaded.org.bouncycastle.util.IPAddress;
 import org.xbill.DNS.*;
 
 import static org.assertj.core.api.Assertions.assertThat;

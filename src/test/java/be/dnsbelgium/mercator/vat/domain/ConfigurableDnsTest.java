@@ -2,6 +2,7 @@ package be.dnsbelgium.mercator.vat.domain;
 
 import be.dnsbelgium.mercator.vat.domain.ConfigurableDns.SupportedIpVersion;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIf;
 import org.slf4j.Logger;
 
 import java.net.Inet4Address;
@@ -17,6 +18,11 @@ class ConfigurableDnsTest {
 
   private static final Logger logger = getLogger(ConfigurableDnsTest.class);
 
+  private static boolean avoidInternet() {
+    return true;
+  }
+
+  @DisabledIf(value = "avoidInternet", disabledReason="We don't want to rely on the internet during testing")
   @Test
   public void bothEnabled() throws UnknownHostException {
     ConfigurableDns configurableDns = new ConfigurableDns(SupportedIpVersion.BOTH);
@@ -28,6 +34,7 @@ class ConfigurableDnsTest {
     assertThat(v6Found).isTrue();
   }
 
+  @DisabledIf(value = "avoidInternet", disabledReason="We don't want to rely on the internet during testing")
   @Test
   public void v4Only() throws UnknownHostException {
     ConfigurableDns configurableDns = new ConfigurableDns(SupportedIpVersion.V4_ONLY);
@@ -40,6 +47,7 @@ class ConfigurableDnsTest {
   }
 
   @Test
+  @DisabledIf(value = "avoidInternet", disabledReason="We don't want to rely on the internet during testing")
   public void v6Only() throws UnknownHostException {
     ConfigurableDns configurableDns = new ConfigurableDns(SupportedIpVersion.V6_ONLY);
     List<InetAddress> ips = configurableDns.lookup("www.dnsbelgium.be");

@@ -1,5 +1,6 @@
-package eu.bosteels.mercator.mono;
+package eu.bosteels.mercator.mono.mvc;
 
+import eu.bosteels.mercator.mono.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,7 @@ public class SearchController {
 
     @GetMapping("/search")
     public String search(Model model, @RequestParam(name = "search", defaultValue = "") String search) {
-        logger.warn("search for [{}]", search);
+        logger.info("search for [{}]", search);
         model.addAttribute("search", search);
         var visits = repository.findDone(search);
         logger.info("Search for {} => found {} visits", search, visits.size());
@@ -34,7 +35,7 @@ public class SearchController {
 
     @GetMapping("/visits/{id}")
     public String visit(Model model, @PathVariable(name = "id") String visitId) {
-        logger.warn("/visits/{}", visitId);
+        logger.info("/visits/{}", visitId);
         model.addAttribute("visitId", visitId);
         //var visits = repository.findDone(search);
 

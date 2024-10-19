@@ -5,7 +5,7 @@ import be.dnsbelgium.mercator.tls.crawler.persistence.entities.CertificateEntity
 import be.dnsbelgium.mercator.tls.crawler.persistence.entities.CrawlResultEntity;
 import be.dnsbelgium.mercator.tls.crawler.persistence.entities.FullScanEntity;
 import be.dnsbelgium.mercator.tls.domain.certificates.Certificate;
-import eu.bosteels.mercator.mono.Repository;
+import eu.bosteels.mercator.mono.VisitRepository;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,12 +33,15 @@ public class TlsCrawlerService {
 
   private final int destinationPort;
 
-  private final Repository repository;
+  private final VisitRepository repository;
 
   @Autowired
   public TlsCrawlerService(
           @Value("${tls.scanner.destination.port:443}") int destinationPort,
-          TlsScanner tlsScanner, FullScanCache fullScanCache, BlackList blackList, Repository repository) {
+          TlsScanner tlsScanner,
+          FullScanCache fullScanCache,
+          BlackList blackList,
+          VisitRepository repository) {
     this.destinationPort = destinationPort;
     this.tlsScanner = tlsScanner;
     this.fullScanCache = fullScanCache;
