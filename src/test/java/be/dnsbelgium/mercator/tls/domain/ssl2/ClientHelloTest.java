@@ -2,7 +2,8 @@ package be.dnsbelgium.mercator.tls.domain.ssl2;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import org.apache.commons.lang3.RandomUtils;
+import org.apache.commons.rng.UniformRandomProvider;
+import org.apache.commons.rng.simple.RandomSource;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
@@ -16,6 +17,7 @@ public class ClientHelloTest {
 
   ClientHelloEncoder encoder = new ClientHelloEncoder();
   ClientHelloDecoder decoder = new ClientHelloDecoder();
+  UniformRandomProvider rng = RandomSource.XO_RO_SHI_RO_128_PP.create();
 
   private final List<SSL2CipherSuite> ciphers = List.of(
       SSL2CipherSuite.SSL_CK_DES_64_CBC_WITH_MD5,
@@ -27,7 +29,8 @@ public class ClientHelloTest {
 
   @Test
   public void encodeDecode_With_SessionId() {
-    byte[] sessionId = RandomUtils.nextBytes(32);
+    byte[] sessionId = new byte[32];
+    rng.nextBytes(sessionId);
     encodeDecode(sessionId);
   }
 
@@ -38,7 +41,8 @@ public class ClientHelloTest {
   }
 
   public void encodeDecode(byte[] sessionId) {
-    byte[] challenge = RandomUtils.nextBytes(32);
+    byte[] challenge = new byte[32];
+    rng.nextBytes(challenge);
     ClientHello clientHello = new ClientHello(2, ciphers, sessionId, challenge);
 
     int expectedLength = 9 + sessionId.length + challenge.length + 3 * ciphers.size();

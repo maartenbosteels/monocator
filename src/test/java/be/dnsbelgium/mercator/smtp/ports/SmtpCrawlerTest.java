@@ -9,7 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.metrics.CompositeMeterRegistryAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+//import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.util.Optional;
@@ -24,7 +25,8 @@ class SmtpCrawlerTest {
   @Autowired
   SmtpCrawler crawler;
 
-  @MockitoBean
+  //@MockitoBean
+  @MockBean
   SmtpCrawlService service;
 
   @Test
@@ -42,7 +44,7 @@ class SmtpCrawlerTest {
 
   @Test
   public void missingVisitIdIsIgnored() throws Exception {
-    VisitRequest request = new VisitRequest((String) null, "abc.be");
+    VisitRequest request = new VisitRequest(null, "abc.be");
     crawler.process(request);
     verify(service, never()).retrieveSmtpInfo(any(VisitRequest.class));
   }

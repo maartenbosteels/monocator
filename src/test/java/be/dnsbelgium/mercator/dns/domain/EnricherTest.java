@@ -12,8 +12,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.metrics.CompositeMeterRegistryAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+//import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.net.InetAddress;
@@ -29,7 +30,8 @@ import static org.mockito.Mockito.when;
 @TestPropertySource(properties = {"crawler.dns.geoIP.enabled=true"})
 class EnricherTest {
 
-  @MockitoBean
+  // @MockitoBean
+  @MockBean
   GeoIpEnricher geoIpEnricher;
 
   @Autowired Enricher enricher;

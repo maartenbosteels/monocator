@@ -15,8 +15,9 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+//import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
@@ -47,7 +48,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 @Disabled
 class SmtpCrawlServiceTest {
 
-  @MockitoBean
+  @MockBean
   MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
   @Autowired
@@ -66,7 +67,7 @@ class SmtpCrawlServiceTest {
   //  So far we have chosen for option (c) which adds 17 seconds to the execution time of this test.
 
   @BeforeAll
-  static void init() throws IOException, InterruptedException {
+  static void init() {
   }
 
   private static final Logger logger = getLogger(SmtpCrawlServiceTest.class);

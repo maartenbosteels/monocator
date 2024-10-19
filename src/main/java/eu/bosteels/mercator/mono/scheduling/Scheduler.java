@@ -49,13 +49,13 @@ public class Scheduler {
         this.workQueue = workQueue;
         this.repository = repository;
         logger.info("Scheduler created: {}", this);
-
     }
 
     @PostConstruct
     public void init() {
         logger.info("Scheduler ingestedDirectory: {}", ingestedDirectory);
         logger.info("Scheduler workDirectory: {}", ingestedDirectory);
+        makeDirectories();
         // create empty parquet file in workDirectory
         String create_file = """
                 copy
@@ -65,6 +65,25 @@ public class Scheduler {
         logger.info("create_file: {}", create_file);
         jdbcTemplate.execute(create_file);
     }
+
+    private void makeDirectories() {
+        if (ingestedDirectory == null) {
+            logger.warn("ingestedDirectory == null => not initializing it");
+        } else {
+            mkDir(ingestedDirectory);
+        }
+        if (workDirectory == null) {
+            logger.warn("workDirectory == null => not initializing it");
+        } else {
+            mkDir(workDirectory);
+        }
+    }
+
+    private void mkDir(File dir) {
+        boolean dirCreated = dir.mkdirs();
+        logger.debug("mkdirs {} created => {}", dir, dirCreated);
+    }
+
 
     /*
     findFilesToIngest

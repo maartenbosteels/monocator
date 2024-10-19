@@ -21,8 +21,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.metrics.CompositeMeterRegistryAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+//import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.Rcode;
@@ -43,13 +44,16 @@ import static org.mockito.Mockito.*;
 @TestPropertySource(properties = {"crawler.dns.geoIP.enabled=true", "spring.profiles.active=local"})
 class DnsCrawlServiceTest {
 
-  @MockitoBean
+  //@MockitoBean
+  @MockBean
   DnsResolver dnsResolver;
 
-  @MockitoBean
+  //@MockitoBean
+  @MockBean
   Enricher enricher;
 
-  @MockitoBean
+  //  @MockitoBean
+  @MockBean
   DnsCrawlerConfigurationProperties dnsCrawlerConfig;
 
   @Autowired
