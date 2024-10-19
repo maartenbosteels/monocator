@@ -1,11 +1,10 @@
+# 19/10
+* test tls + caching
+* smtp
+* revert ZonedDateTime to Instant
+* Crawler interface + implementations
+* clean up visits_db files at the end of a test (or use temp folder)
 
-
-# split up Repository class
-* VisitRepository to save visit data (dns, tls, smtp, http, ...)
-* SchedulerRepository for tables Done, Todo, Ingested
-* store locations of Visit databases in scheduler db
-* on startup: check if previous VisitDatabase still exists
-* move all SQL code to one of both repositories 
 
 # DDL: smtp todo
 
@@ -15,8 +14,12 @@
 * smtp_host
 
 # full crawl: smtp still todo
-* call all crawlers
-* persist all results
+
+# split up Repository class
+* SchedulerRepository for tables Done, Todo, Ingested
+* store locations of Visit databases in scheduler db
+* on startup: check if previous VisitDatabase still exists
+
 
 # report duckdb bug
 create table t as select current_timestamp ct, epoch_ms(current_timestamp) ems, make_timestamp(epoch_ms(current_timestamp)*1000) mt, epoch_ms(epoch_ms(current_timestamp)) ct2;
@@ -80,7 +83,7 @@ All tests should pass WITHOUT trying to download maxmind DB
 * remove com.zaxxer:HikariCP:5.1.0
 
 # check test coverage
-* momenteel: 73% class, 70% method, 65% line
+* now: 73% class, 70% method, 65% line
 
 # VisitRequest Message format
 * dns.enabled
@@ -103,9 +106,6 @@ All tests should pass WITHOUT trying to download maxmind DB
 * tls.ssl2.enabled
 * tls.ssl3.enabled
 * smtp.enabled
-
-# duckdb: deal with varchar[]
-* try to go via JSON instead of manually escaping strings ?
 
 # Wappalyzer
 
