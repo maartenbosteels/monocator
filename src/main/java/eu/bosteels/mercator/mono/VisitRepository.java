@@ -10,6 +10,8 @@ import be.dnsbelgium.mercator.feature.extraction.persistence.HtmlFeatures;
 import be.dnsbelgium.mercator.tls.crawler.persistence.entities.CertificateEntity;
 import be.dnsbelgium.mercator.tls.crawler.persistence.entities.CrawlResultEntity;
 import be.dnsbelgium.mercator.tls.crawler.persistence.entities.FullScanEntity;
+import be.dnsbelgium.mercator.tls.domain.CrawlResult;
+import be.dnsbelgium.mercator.tls.domain.certificates.Certificate;
 import be.dnsbelgium.mercator.vat.crawler.persistence.PageVisit;
 import be.dnsbelgium.mercator.vat.crawler.persistence.VatCrawlResult;
 import be.dnsbelgium.mercator.vat.domain.Link;
@@ -36,10 +38,7 @@ import java.io.IOException;
 import java.sql.Array;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static eu.bosteels.mercator.mono.Repository.*;
 
@@ -81,9 +80,11 @@ public class VisitRepository {
   @Value("${visits.database.deleteAfterExport:true}")
   boolean deleteDatabaseAfterExport;
 
+  @Value("${visits.database.ulidInDatabaseName:true}")
+  boolean ulidInDatabaseName;
+
   @Autowired
-  public VisitRepository(DuckDataSource dataSource,
-                         TableCreator tableCreator) {
+  public VisitRepository(DuckDataSource dataSource, TableCreator tableCreator) {
     this.jdbcTemplate = new JdbcTemplate(dataSource);
     this.jdbcClient = JdbcClient.create(dataSource);
     this.tableCreator = tableCreator;
@@ -146,15 +147,15 @@ public class VisitRepository {
 
       var duration = Duration.between(start, Instant.now());
       logger.debug("Done saving VisitResult for {}, took {}", visitResult.visitRequest(), duration);
+
+      for (CrawlResult crawlResult : visitResult.tlsCrawlResult().crawlResults()) {
+        persist(crawlResult);
+      }
+
     } catch (Exception e) {
       logger.info("save on {} started at {} failed", dbName, start);
       throw e;
     }
-  }
-
-  private void mkDir(File dir) {
-    boolean ok = dir.mkdirs();
-    logger.info("mkdirs {} => {}", dir, ok);
   }
 
   @Transactional
@@ -179,7 +180,11 @@ public class VisitRepository {
     this.databaseCounter++;
     // The databaseCounter will restart from zero when the process is restarted
     // Its only purpose is to make it easier to spot the most recently created database
-    this.databaseName = "visits_db_" + databaseCounter + "_" + Ulid.fast();
+    if (ulidInDatabaseName) {
+      this.databaseName = "visits_db_" + databaseCounter + "_" + Ulid.fast();
+    } else {
+      this.databaseName = "visits_db_" + databaseCounter;
+    }
     this.databaseFile = new File(databaseDirectory, databaseName + ".db");
     attachAndUse();
     tableCreator.createVisitTables();
@@ -592,6 +597,32 @@ public class VisitRepository {
     );
   }
 
+  public void persist(CrawlResult crawlResult) {
+    logger.debug("Persisting crawlResult");
+    CrawlResultEntity crawlResultEntity = crawlResult.convertToEntity();
+    if (crawlResult.isFresh()) {
+      save(crawlResult.getFullScanEntity());
+    }
+    saveCertificates(crawlResult.getCertificateChain());
+    save(crawlResultEntity);
+  }
+
+  private void saveCertificates(Optional<List<Certificate>> chain) {
+    if (chain.isPresent()) {
+      // We have to save the chain in reversed order because of the foreign keys
+      List<Certificate> reversed = new ArrayList<>(chain.get());
+      Collections.reverse(reversed);
+      for (Certificate certificate : reversed) {
+        // We always call save, the insert will be a no-op when a cert with this fingerprint already exists
+        // because of the 'ON CONFLICT DO NOTHING' clause
+        CertificateEntity certificateEntity = certificate.asEntity();
+        save(certificateEntity);
+        logger.debug("certificate saved: {}", certificate);
+      }
+    }
+  }
+
+
   public void save(CrawlResultEntity crawlResult) {
     String insert = """
                 insert into tls_crawl_result(
@@ -607,7 +638,7 @@ public class VisitRepository {
                 chain_trusted_by_java_platform
                 )
             """ + values(10);
-    var leafCert = (crawlResult.getLeafCertificateEntity() == null) ? null : crawlResult.getLeafCertificateEntity().getSha256fingerprint();
+    String leafCertFingerPrint = (crawlResult.getLeafCertificateEntity() == null) ? null : crawlResult.getLeafCertificateEntity().getSha256fingerprint();
     jdbcTemplate.update(
             insert,
             crawlResult.getVisitId(),
@@ -616,7 +647,7 @@ public class VisitRepository {
             crawlResult.getFullScanEntity().getId(),
             crawlResult.isHostNameMatchesCertificate(),
             crawlResult.getHostName(),
-            leafCert,
+            leafCertFingerPrint,
             crawlResult.isCertificateExpired(),
             crawlResult.isCertificateTooSoon(),
             crawlResult.isChainTrustedByJavaPlatform()

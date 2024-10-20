@@ -7,6 +7,8 @@ import be.dnsbelgium.mercator.feature.extraction.HtmlFeatureExtractor;
 import be.dnsbelgium.mercator.feature.extraction.persistence.HtmlFeatures;
 import be.dnsbelgium.mercator.smtp.SmtpCrawlService;
 import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpVisit;
+import be.dnsbelgium.mercator.tls.domain.CrawlResult;
+import be.dnsbelgium.mercator.tls.domain.TlsCrawlResult;
 import be.dnsbelgium.mercator.tls.ports.TlsCrawler;
 import be.dnsbelgium.mercator.vat.VatCrawlerService;
 import be.dnsbelgium.mercator.vat.crawler.persistence.VatCrawlResult;
@@ -46,8 +48,7 @@ public class MainCrawler {
                        TlsCrawler tlsCrawler,
                        HtmlFeatureExtractor htmlFeatureExtractor,
                        Repository repository,
-                       VisitService visitService
-    ) {
+                       VisitService visitService) {
         this.dnsCrawlService = dnsCrawlService;
         this.vatCrawlerService = vatCrawlerService;
         this.smtpCrawlService = smtpCrawlService;
@@ -61,8 +62,14 @@ public class MainCrawler {
     public void visit(VisitRequest visitRequest) {
         VisitResult visitResult = collectData(visitRequest);
         visitService.save(visitResult);
-        // TODO: now the full_scan rows have been saved => now add them to the fullScanCache
         repository.markDone(visitRequest);
+        postSave(visitResult);
+    }
+
+    private void postSave(VisitResult visitResult) {
+        for (CrawlResult crawlResult: visitResult.tlsCrawlResult().crawlResults()) {
+            tlsCrawler.addToCache(crawlResult);
+        }
     }
 
     private VisitResult collectData(VisitRequest visitRequest) {
@@ -83,8 +90,7 @@ public class MainCrawler {
             features.domainName = visitRequest.getDomainName();
             featuresList.add(features);
         }
-        // disable TLS crawls until cache issue is fixed
-        // tlsCrawler.process(visitRequest);
+        TlsCrawlResult tlsCrawlResult = tlsCrawler.visit(visitRequest);
         if (smtpEnabled) {
             smtp(visitRequest);
         }
@@ -94,7 +100,8 @@ public class MainCrawler {
                 featuresList,
                 vatCrawlResult,
                 siteVisit,
-                null
+                tlsCrawlResult,
+            null
         );
     }
 

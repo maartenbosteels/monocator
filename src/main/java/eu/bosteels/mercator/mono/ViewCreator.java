@@ -33,7 +33,8 @@ public class ViewCreator {
 
   private void createView(String tableName) {
     String path = visitRepository.getExportDirectory().getAbsolutePath();
-    String ddl  = "create or replace table %s as select * from '%s/**/%s.parquet'".formatted(tableName, path, tableName);
+    String ddl  = "create or replace table %s as select * from read_parquet('%s/**/%s.parquet', union_by_name = True)"
+        .formatted(tableName, path, tableName);
     jdbcClient.sql(ddl).update();
     logger.info("Created view {}", tableName);
   }

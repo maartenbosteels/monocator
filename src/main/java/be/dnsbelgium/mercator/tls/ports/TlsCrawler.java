@@ -1,46 +1,48 @@
 package be.dnsbelgium.mercator.tls.ports;
 
 import be.dnsbelgium.mercator.common.VisitRequest;
-import be.dnsbelgium.mercator.tls.domain.CrawlResult;
-import be.dnsbelgium.mercator.tls.domain.FullScanCache;
-import be.dnsbelgium.mercator.tls.domain.TlsCrawlerService;
-import be.dnsbelgium.mercator.tls.metrics.MetricName;
-import io.micrometer.core.instrument.MeterRegistry;
-import lombok.SneakyThrows;
-import org.apache.commons.lang3.StringUtils;
+import be.dnsbelgium.mercator.tls.crawler.persistence.entities.FullScanEntity;
+import be.dnsbelgium.mercator.tls.domain.*;
 import org.slf4j.Logger;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
+
+import java.net.InetSocketAddress;
+import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
 public class TlsCrawler {
 
-  // TODO: remove this class
-
-  private final MeterRegistry meterRegistry;
-
-  private final TlsCrawlerService crawlerService;
-
   private final FullScanCache fullScanCache;
+  private final TlsScanner tlsScanner;
+  private final BlackList blackList;
 
   private static final Logger logger = getLogger(TlsCrawler.class);
 
-  @Value("${tls.crawler.visit.apex:true}")  private boolean visitApex;
-  @Value("${tls.crawler.visit.www:true}")   private boolean visitWww;
-  @Value("${tls.crawler.allow.noop:false}") private boolean allowNoop;
+  @Value("${tls.scanner.destination.port:443}") private int destinationPort;
+  @Value("${tls.crawler.visit.apex:true}")      private boolean visitApex;
+  @Value("${tls.crawler.visit.www:true}")       private boolean visitWww;
+  @Value("${tls.crawler.allow.noop:false}")     private boolean allowNoop;
 
   @Autowired
-  public TlsCrawler(MeterRegistry meterRegistry, TlsCrawlerService crawlerService, FullScanCache fullScanCache) {
-    this.meterRegistry = meterRegistry;
-    this.crawlerService = crawlerService;
-    this.fullScanCache = fullScanCache;
+  public TlsCrawler(
+            TlsScanner tlsScanner,
+            FullScanCache fullScanCache,
+            BlackList blackList) {
+      this.fullScanCache = fullScanCache;
+      this.tlsScanner = tlsScanner;
+      this.blackList = blackList;
   }
 
   @PostConstruct
@@ -58,69 +60,63 @@ public class TlsCrawler {
     }
   }
 
-  public void process(VisitRequest visitRequest) {
-    if (visitRequest == null || visitRequest.getVisitId() == null || visitRequest.getDomainName() == null) {
-      logger.info("Received visitRequest without visitId or domain name. visitRequest={} => ignoring", visitRequest);
-      return;
+  public TlsCrawlResult visit(VisitRequest visitRequest) {
+    List<CrawlResult> results = new ArrayList<>();
+    if (visitApex) {
+      String hostName = visitRequest.getDomainName();
+      CrawlResult crawlResult = visit(hostName, visitRequest);
+      results.add(crawlResult);
     }
-    try {
-      MDC.put("domainName", visitRequest.getDomainName());
-      MDC.put("visitId", visitRequest.getVisitId());
-      logger.debug("Received VisitRequest for domainName={}", visitRequest.getDomainName());
-
-      if (visitApex) {
-        scanHostname("", visitRequest);
-      }
-      if (visitWww) {
-        scanHostname("www.", visitRequest);
-      }
-
-      meterRegistry.counter(MetricName.COUNTER_VISITS_COMPLETED).increment();
-
-    } finally {
-      MDC.remove("domainName");
-      MDC.remove("visitId");
+    if (visitWww) {
+      String hostName = "www." + visitRequest.getDomainName();
+      CrawlResult crawlResult = visit(hostName, visitRequest);
+      results.add(crawlResult);
     }
+    return new TlsCrawlResult(results);
   }
 
-  private void scanHostname(String prefix, VisitRequest visitRequest) {
-    String hostName = prefix + visitRequest.getDomainName();
-    try {
-      CrawlResult crawlResult = crawlerService.visit(hostName, visitRequest);
-      crawlerService.persist(crawlResult);
-      if (crawlResult.isFresh()) {
-        fullScanCache.add(Instant.now(), crawlResult.getFullScanEntity());
-      }
-    } catch (Throwable e) {
-      if (exceptionContains(e, "duplicate key value violates unique constraint")) {
-        meterRegistry.counter(MetricName.COUNTER_DUPLICATE_VISITS).increment();
-        logger.info("crawlResult already in the database hostName={} visitId={} => ignoring this request", hostName, visitRequest.getVisitId());
-      } else {
-        logAndRethrow(visitRequest, e);
-      }
-    }
+  public void addToCache(CrawlResult crawlResult) {
+    fullScanCache.add(Instant.now(), crawlResult.getFullScanEntity());
   }
 
-  @SneakyThrows
-  private void logAndRethrow(VisitRequest visitRequest, Throwable e) {
-    meterRegistry.counter(MetricName.COUNTER_VISITS_FAILED).increment();
-    logger.error("Failed to check TLS support for domainName={} and visitId={} exception={} message={}",
-        visitRequest.getDomainName(), visitRequest.getVisitId(), e.getClass().getName(), e.getMessage());
-    throw e;
+  @Scheduled(fixedRate = 15, initialDelay = 15, timeUnit = TimeUnit.MINUTES)
+  public void clearCacheScheduled() {
+    logger.info("clearCacheScheduled: evicting entries older than 4 hours");
+    // every 15 minutes we remove all FullScanEntity objects older than 4 hours from the cache
+    fullScanCache.evictEntriesOlderThan(Duration.ofHours(4));
   }
 
-  @SuppressWarnings("SameParameterValue")
-  private boolean exceptionContains(Throwable throwable, String message) {
-    while (throwable != null) {
-      if (StringUtils.contains(throwable.getMessage(), message)) {
-        return true;
+  /**
+   * Either visit the domain name or get the result from the cache.
+   * Does NOT save anything in the database
+   * @param visitRequest the domain name to visit
+   * @return the results of scanning the domain name
+   */
+  public CrawlResult visit(String hostName, VisitRequest visitRequest) {
+    logger.info("Crawling {}", visitRequest);
+    InetSocketAddress address = new InetSocketAddress(hostName, destinationPort);
+
+    if (!address.isUnresolved()) {
+      String ip = address.getAddress().getHostAddress();
+      Optional<FullScanEntity> resultFromCache = fullScanCache.find(ip);
+      if (resultFromCache.isPresent()) {
+        logger.debug("Found matching result in the cache. Now get certificates for {}", hostName);
+        TlsProtocolVersion version = TlsProtocolVersion.of(resultFromCache.get().getHighestVersionSupported());
+        SingleVersionScan singleVersionScan = (version != null) ? tlsScanner.scan(version, hostName) : null;
+        return CrawlResult.fromCache(hostName, visitRequest, resultFromCache.get(), singleVersionScan);
       }
-      if (throwable.getCause() == throwable) {
-        return false;
-      }
-      throwable = throwable.getCause();
     }
-    return false;
+    FullScan fullScan = scanIfNotBlacklisted(address);
+    return CrawlResult.fromScan(hostName, visitRequest, fullScan);
   }
+
+  private FullScan scanIfNotBlacklisted(InetSocketAddress address) {
+    if (blackList.isBlacklisted(address)) {
+      return FullScan.connectFailed(address, "IP address is blacklisted");
+    }
+    return tlsScanner.scan(address);
+  }
+
+
 
 }
