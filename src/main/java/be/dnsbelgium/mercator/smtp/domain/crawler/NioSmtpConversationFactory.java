@@ -55,7 +55,7 @@ public class NioSmtpConversationFactory implements SmtpConversationFactory {
     SSLContext sslContext;
     if (config.isTrustAnyone()) {
       logger.info("We are configured to trust anyone => use InsecureTrustManagerFactory");
-      sslContext = SSLContext.getInstance("SSLv3");
+      sslContext = SSLContext.getInstance("TLS");
       sslContext.init(null, InsecureTrustManagerFactory.INSTANCE.getTrustManagers(), null);
     } else {
       sslContext = SSLContext.getDefault();

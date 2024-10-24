@@ -92,6 +92,7 @@ public class HtmlFeatureExtractor {
     InputStream inputStream = new ByteArrayInputStream(rawHtml.getBytes(StandardCharsets.UTF_8));
     HtmlFeatures htmlFeatures = extractFromHtml(inputStream, url, domainName);
     htmlFeatures.html_length = rawHtml.length();
+    htmlFeatures.url = url;
     return htmlFeatures;
   }
 

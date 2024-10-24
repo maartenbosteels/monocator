@@ -5,7 +5,7 @@ import be.dnsbelgium.mercator.dns.domain.DnsCrawlResult;
 import be.dnsbelgium.mercator.dns.domain.DnsCrawlService;
 import be.dnsbelgium.mercator.feature.extraction.HtmlFeatureExtractor;
 import be.dnsbelgium.mercator.feature.extraction.persistence.HtmlFeatures;
-import be.dnsbelgium.mercator.smtp.SmtpCrawlService;
+import be.dnsbelgium.mercator.smtp.SmtpCrawler;
 import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpVisit;
 import be.dnsbelgium.mercator.tls.domain.CrawlResult;
 import be.dnsbelgium.mercator.tls.domain.TlsCrawlResult;
@@ -22,7 +22,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings("SqlDialectInspection")
 @Service
@@ -30,33 +32,38 @@ public class MainCrawler {
 
     private final DnsCrawlService dnsCrawlService;
     private final VatCrawlerService vatCrawlerService;
-    private final SmtpCrawlService smtpCrawlService;
     private final TlsCrawler tlsCrawler;
     private final HtmlFeatureExtractor htmlFeatureExtractor;
+    private final SmtpCrawler smtpCrawler;
 
     private final Repository repository;
     private final VisitService visitService;
 
-    private final boolean smtpEnabled;
+    private final List<CrawlerModule<?>> crawlerModules;
 
     private static final Logger logger = LoggerFactory.getLogger(MainCrawler.class);
 
     @Autowired
     public MainCrawler(DnsCrawlService dnsCrawlService,
                        VatCrawlerService vatCrawlerService,
-                       SmtpCrawlService smtpCrawlService,
                        TlsCrawler tlsCrawler,
                        HtmlFeatureExtractor htmlFeatureExtractor,
                        Repository repository,
+                       SmtpCrawler smtpCrawler,
                        VisitService visitService) {
         this.dnsCrawlService = dnsCrawlService;
         this.vatCrawlerService = vatCrawlerService;
-        this.smtpCrawlService = smtpCrawlService;
         this.tlsCrawler = tlsCrawler;
         this.htmlFeatureExtractor = htmlFeatureExtractor;
         this.repository = repository;
         this.visitService = visitService;
-        smtpEnabled = false;
+        this.smtpCrawler = smtpCrawler;
+        crawlerModules = new ArrayList<>();
+    }
+
+    @SuppressWarnings("unused")
+    public void register(CrawlerModule<?> crawlerModule) {
+        crawlerModules.add(crawlerModule);
     }
 
     public void visit(VisitRequest visitRequest) {
@@ -80,6 +87,7 @@ public class MainCrawler {
         List<HtmlFeatures> featuresList = new ArrayList<>();
         for (Page page : siteVisit.getVisitedPages().values()) {
             var html = page.getDocument().html();
+            logger.info("page.url = {}", page.getUrl());
             var features = htmlFeatureExtractor.extractFromHtml(
                     html,
                     page.getUrl().url().toExternalForm(),
@@ -91,9 +99,9 @@ public class MainCrawler {
             featuresList.add(features);
         }
         TlsCrawlResult tlsCrawlResult = tlsCrawler.visit(visitRequest);
-        if (smtpEnabled) {
-            smtp(visitRequest);
-        }
+        // TODO
+        //var list = smtpCrawler.collectData(visitRequest);
+        SmtpVisit smtpVisit = new SmtpVisit();
         return new VisitResult(
                 visitRequest,
                 dnsCrawlResult,
@@ -101,13 +109,36 @@ public class MainCrawler {
                 vatCrawlResult,
                 siteVisit,
                 tlsCrawlResult,
-            null
+                smtpVisit
         );
     }
 
-    private void smtp(VisitRequest visitRequest) {
-        SmtpVisit smtpVisit = smtpCrawlService.retrieveSmtpInfo(visitRequest);
-        logger.info("smtpVisit = {}", smtpVisit);
+    // TODO: finish this idea
+    @SuppressWarnings("unused")
+    public void visit2(VisitRequest visitRequest) {
+
+        Map<String, List<?>> dataPerModule = new HashMap<>();
+        logger.info("Starting visit for {}", visitRequest.getDomainName());
+
+        for (CrawlerModule<?> crawlerModule : crawlerModules) {
+            List<?> data = crawlerModule.collectData(visitRequest);
+            String key = crawlerModule.getClass().getName();
+            dataPerModule.put(key, data);
+        }
+
+        for (CrawlerModule<?> crawlerModule : crawlerModules) {
+            String key = crawlerModule.getClass().getName();
+            List<?> data = dataPerModule.get(key);
+            crawlerModule.save(data);
+        }
+
+        for (CrawlerModule<?> crawlerModule : crawlerModules) {
+            String key = crawlerModule.getClass().getName();
+            List<?> data = dataPerModule.get(key);
+            //crawlerModule.afterSave(data);
+        }
+
+
     }
 
 }

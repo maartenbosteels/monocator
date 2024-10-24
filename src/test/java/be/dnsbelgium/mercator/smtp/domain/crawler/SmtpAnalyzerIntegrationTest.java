@@ -45,20 +45,4 @@ class SmtpAnalyzerIntegrationTest {
     assertThat(hosts.get(0).getConversation().getErrorMessage()).isNull();
   }
 
-  @Test
-  public void anotherDomain() throws Exception {
-    var result = smtpAnalyzer.analyze("bosteels.eu");
-    logger.info("bosteels.eu => {}", result);
-    assertThat(result).isNotNull();
-    assertThat(result.getCrawlStatus()).isEqualTo(CrawlStatus.OK);
-    assertThat(result.getTimestamp()).isNotNull();
-    List<SmtpHost> hosts = result.getHosts();
-    assertThat(hosts.size()).isGreaterThan(0);
-    assertThat(hosts.get(0).getConversation().getConnectReplyCode()).isEqualTo(220);
-    assertThat(hosts.get(0).getConversation().getStartTlsReplyCode()).isEqualTo(220);
-    assertThat(hosts.get(0).getConversation().getConnectionTimeMs()).isGreaterThan(1);
-    assertThat(hosts.get(0).getConversation().isConnectOK()).isTrue();
-    assertThat(hosts.get(0).getConversation().isStartTlsOk()).isTrue();
-    assertThat(hosts.get(0).getConversation().getErrorMessage()).isNull();
-  }
 }

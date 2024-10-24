@@ -67,6 +67,19 @@ dependencies {
     // mockserver-junit-jupiter pulls in vulnerable version 2.9.0
     testImplementation 'org.xmlunit:xmlunit-core:2.10.0'
 
+    // https://mvnrepository.com/artifact/org.testcontainers/testcontainers
+    testImplementation group: 'org.testcontainers', name: 'testcontainers', version: '1.20.3'
+    // https://mvnrepository.com/artifact/org.testcontainers/junit-jupiter
+    testImplementation group: 'org.testcontainers', name: 'junit-jupiter', version: '1.20.3'
+
+    // https://mvnrepository.com/artifact/org.aspectj/aspectjrt
+    runtimeOnly group: 'org.aspectj', name: 'aspectjrt', version: '1.9.22.1'
+
+// https://mvnrepository.com/artifact/org.aspectj/aspectjweaver
+    runtimeOnly group: 'org.aspectj', name: 'aspectjweaver', version: '1.9.22.1'
+
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
     // artemis-jakarta-client:2.33.0 pulls in vulnerable version 1.77
     implementation 'org.bouncycastle:bcprov-jdk18on:1.78'
 

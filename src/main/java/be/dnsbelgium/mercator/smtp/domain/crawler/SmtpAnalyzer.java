@@ -7,6 +7,7 @@ import be.dnsbelgium.mercator.smtp.persistence.entities.CrawlStatus;
 import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpConversation;
 import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpHost;
 import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpVisit;
+import io.micrometer.core.annotation.Timed;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import org.slf4j.Logger;
@@ -18,7 +19,7 @@ import org.xbill.DNS.MXRecord;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.util.List;
 
 import static org.slf4j.LoggerFactory.getLogger;
@@ -61,6 +62,8 @@ public class SmtpAnalyzer {
     logger.info("skipIPv4={} skipIPv6={}, maxHostsToContact={}", skipIPv4, skipIPv6, maxHostsToContact);
   }
 
+  // Basically the same as visit (except for the timer around doCrawl)
+  // only used in tests ?
   public SmtpVisit analyze(String domainName) throws Exception {
     TxLogger.log(getClass(), "analyze");
     SmtpVisit result = meterRegistry.timer(MetricName.TIMER_SMTP_ANALYSIS).recordCallable(() -> doCrawl(domainName));
@@ -68,9 +71,9 @@ public class SmtpAnalyzer {
     return result;
   }
 
+  @Timed
   public SmtpVisit visit(String domainName) {
     TxLogger.log(getClass(), "analyze");
-    // TODO MEASURE DURATION
     SmtpVisit result = doCrawl(domainName);
     meterRegistry.counter(MetricName.SMTP_DOMAINS_DONE).increment();
     return result;
@@ -81,7 +84,7 @@ public class SmtpAnalyzer {
     logger.debug("Starting SMTP crawl for domainName={}", domainName);
     SmtpVisit result = new SmtpVisit();
     result.setDomainName(domainName);
-    result.setTimestamp(ZonedDateTime.now());
+    result.setTimestamp(Instant.now());
     MxLookupResult mxLookupResult = mxFinder.findMxRecordsFor(domainName);
     switch (mxLookupResult.getStatus()) {
       case INVALID_HOSTNAME -> {
@@ -154,7 +157,7 @@ public class SmtpAnalyzer {
 
   private void visitHostname(SmtpVisit visit, String hostName, int priority, boolean fromMx) {
     List<InetAddress> addresses = mxFinder.findIpAddresses(hostName);
-    if (addresses.size() == 0) {
+    if (addresses.isEmpty()) {
       logger.debug("No addresses found for hostName {}", hostName);
       return;
     }
@@ -196,14 +199,15 @@ public class SmtpAnalyzer {
 
     // first check the cache
     String ip = address.getHostAddress();
-    SmtpConversation conversation = conversationCache.get(ip);
-    if (conversation != null) {
-      logger.debug("Found conversation in the cache: {}", conversation);
+    SmtpConversation cachedConversation = conversationCache.get(ip);
+    if (cachedConversation != null) {
+      logger.debug("Found conversation in the cache: {}", cachedConversation);
+      return cachedConversation;
     } else {
-      conversation = smtpIpAnalyzer.crawl(address);
+      SmtpConversation conversation = smtpIpAnalyzer.crawl(address);
       logger.debug("done crawling ip {}", address);
+      return conversation;
     }
-    return conversation;
 
   }
 

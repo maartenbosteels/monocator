@@ -20,7 +20,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 public class CaffeineTest {
 
     private static final Logger logger = getLogger(CaffeineTest.class);
-    public static final int CACHE_TIME = 500;
+    public static final int CACHE_TIME = 10;
 
     private SmtpConversation findByIp(InetAddress ip) {
         logger.info("crawling for ip = {}", ip);

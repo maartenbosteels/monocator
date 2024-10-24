@@ -75,8 +75,8 @@ public class NioSmtpConversation implements Conversation {
             return start().get();
         } catch (ExecutionException | InterruptedException e) {
             meterRegistry.counter(MetricName.COUNTER_CONVERSATION_FAILED).increment();
-            logger.error("crawl failed: {}", e.getMessage());
-            return null;
+            logger.error("crawl failed: message:{}", e.getMessage());
+            return new SmtpConversation();
         }
     }
 
@@ -166,7 +166,8 @@ public class NioSmtpConversation implements Conversation {
      * @return the response code of the first response (or -1)
      */
     private int getReplyCode(SmtpClientResponse smtpClientResponse) {
-        return (smtpClientResponse.getResponses().isEmpty() ? NO_RESPONSE_CODE : smtpClientResponse.getResponses().get(0).code());
+        return smtpClientResponse.getResponses().isEmpty() ?
+            NO_RESPONSE_CODE : smtpClientResponse.getResponses().get(0).code();
     }
 
     private SmtpConversation handleException(Throwable throwable) {
@@ -230,7 +231,7 @@ public class NioSmtpConversation implements Conversation {
         return cleanedErrorMessage;
     }
 
-    public Error getErrorFromErrorMessage(String errorMessage){
+    public static Error getErrorFromErrorMessage(String errorMessage){
         if (errorMessage.equals("Connection timed out") ||
             errorMessage.equals("Timed out waiting for a response")) {
             return Error.TIME_OUT;

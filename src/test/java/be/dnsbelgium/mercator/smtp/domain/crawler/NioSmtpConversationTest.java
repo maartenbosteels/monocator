@@ -8,7 +8,6 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.netty.handler.codec.smtp.DefaultSmtpResponse;
 import io.netty.handler.codec.smtp.SmtpRequest;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
@@ -28,7 +27,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.slf4j.LoggerFactory.getLogger;
 
-@Disabled
 class NioSmtpConversationTest {
 
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
@@ -57,7 +55,7 @@ class NioSmtpConversationTest {
         when(sessionFactory.connect(sessionConfig)).thenReturn(response(session, 123, "my-test-banner"));
         CompletableFuture<SmtpClientResponse> connect = crawl.connect().toCompletableFuture();
         connect.get();
-        logger.info("crawl: " + crawl.getConversation());
+        logger.info("crawl: {}", crawl.getConversation());
         var result = crawl.getConversation();
         assertThat(result.getBanner()).isNull();
         assertThat(result.getErrorMessage()).isNullOrEmpty();
@@ -75,7 +73,7 @@ class NioSmtpConversationTest {
         CompletableFuture<SmtpClientResponse> response = sessionFactory.connect(sessionConfig);
         crawl.connect();
         crawl.sendEHLO(response.get());
-        logger.info("crawl: " + crawl.getConversation());
+        logger.info("crawl: {}", crawl.getConversation());
         var result = crawl.getConversation();
         assertThat(result.getBanner()).isEqualTo("123 my-test-banner");
         assertThat(result.getErrorMessage()).isNullOrEmpty();
@@ -95,7 +93,7 @@ class NioSmtpConversationTest {
         SmtpClientResponse connectResponse = response(session, 123, "my-test-banner").get();
         crawl.sendEHLO(connectResponse);
         crawl.startTLS(connectResponse);
-        logger.info("crawl: " + crawl.getConversation());
+        logger.info("crawl: {}", crawl.getConversation());
         var result = crawl.getConversation();
         assertThat(result.getErrorMessage()).isNullOrEmpty();
         assertThat(result.getIp()).isEqualTo("10.20.30.40");
@@ -147,33 +145,29 @@ class NioSmtpConversationTest {
 
     @Test
     public void getErrorFromErrorMessageTimedOutWaitingForResponse(){
-        NioSmtpConversation conversation = makeCrawl();
         String errorMessage = "Timed out waiting for a response";
-        Error error = conversation.getErrorFromErrorMessage(errorMessage);
+        Error error = NioSmtpConversation.getErrorFromErrorMessage(errorMessage);
         assertThat(error).isEqualTo(Error.TIME_OUT);
     }
 
     @Test
     public void getErrorFromErrorMessageNotAfter(){
-        NioSmtpConversation conversation = makeCrawl();
         String errorMessage = "NotAfter";
-        Error error = conversation.getErrorFromErrorMessage(errorMessage);
+        Error error = NioSmtpConversation.getErrorFromErrorMessage(errorMessage);
         assertThat(error).isEqualTo(Error.TLS_ERROR);
     }
 
     @Test
     public void getErrorFromErrorMessageHostIsUnreachable(){
-        NioSmtpConversation conversation = makeCrawl();
         String errorMessage = "Host is unreachable";
-        Error error = conversation.getErrorFromErrorMessage(errorMessage);
+        Error error = NioSmtpConversation.getErrorFromErrorMessage(errorMessage);
         assertThat(error).isEqualTo(Error.HOST_UNREACHABLE);
     }
 
     @Test
     public void getErrorFromErrorMessageConnectionRefused(){
-        NioSmtpConversation conversation = makeCrawl();
         String errorMessage = "Connection refused";
-        Error error = conversation.getErrorFromErrorMessage(errorMessage);
+        Error error = NioSmtpConversation.getErrorFromErrorMessage(errorMessage);
         assertThat(error).isEqualTo(Error.CONNECTION_ERROR);
     }
 

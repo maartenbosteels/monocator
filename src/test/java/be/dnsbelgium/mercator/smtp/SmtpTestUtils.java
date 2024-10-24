@@ -1,5 +1,12 @@
 package be.dnsbelgium.mercator.smtp;
 
+import be.dnsbelgium.mercator.common.VisitIdGenerator;
+import be.dnsbelgium.mercator.smtp.dto.Error;
+import be.dnsbelgium.mercator.smtp.persistence.entities.CrawlStatus;
+import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpConversation;
+import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpHost;
+import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpVisit;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.xbill.DNS.DClass;
 import org.xbill.DNS.MXRecord;
@@ -8,6 +15,9 @@ import org.xbill.DNS.TextParseException;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.Instant;
+import java.util.List;
+import java.util.Set;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -44,6 +54,79 @@ public class SmtpTestUtils {
         } catch (TextParseException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static SmtpVisit visit() {
+        SmtpHost host1 = host(RandomStringUtils.randomAscii(8));
+        SmtpHost host2 = host(RandomStringUtils.randomAscii(8));
+      return SmtpVisit.builder()
+          .visitId(VisitIdGenerator.generate())
+          .hosts(List.of(host1, host2))
+          .domainName("example.com")
+          .crawlStatus(CrawlStatus.OK)
+          .timestamp(Instant.now())
+          .numConversations(2)
+          .build();
+    }
+
+    public static SmtpHost host(String id) {
+        return SmtpHost.builder()
+            .id(id)
+            .hostName("smtp1.example.org")
+            .conversation(conversation(id))
+            .fromMx(true)
+            .priority(10)
+            .build();
+    }
+
+    public static SmtpConversation conversation(String id) {
+        return SmtpConversation.builder()
+            .id(id)
+            .ip("127.0.0.1")
+            .asn(14506L)
+            .asnOrganisation("Acme Corp.")
+            .country("BE")
+            .banner("Welcome to Acme SMTP server")
+            .connectOK(true)
+            .connectReplyCode(220)
+            .ipVersion(4)
+            .connectionTimeMs(123)
+            .startTlsOk(true)
+            .startTlsReplyCode(230)
+            .software("ACME SMTP")
+            .softwareVersion("0.never")
+            .timestamp(Instant.now())
+            .supportedExtensions(Set.of("SMTPUTF8", "SIZE 157286400"))
+            .errorMessage("Connection timed out")
+            .error(Error.TIME_OUT)
+            .build();
+    }
+
+    public static SmtpVisit smtpVisitWithBinaryData() {
+        var visitId = SmtpVisit.generateVisitId();
+        var conversation = SmtpConversation.builder()
+            .id(RandomStringUtils.randomAlphanumeric(10))
+            .ip("1.2.3.4")
+            .connectReplyCode(220)
+            .ipVersion(4)
+            .banner("my binary \u0000 banner")
+            .connectionTimeMs(123)
+            .startTlsOk(false)
+            .country("Jamaica \u0000")
+            .asnOrganisation("Happy \u0000 Green grass")
+            .asn(654L)
+            .build();
+        SmtpHost host = SmtpHost.builder()
+            .id(RandomStringUtils.randomAlphanumeric(10))
+            .hostName("smtp1.example.com")
+            .conversation(conversation)
+            .build();
+        return SmtpVisit.builder()
+            .visitId(visitId)
+            .domainName("dnsbelgium.be")
+            .timestamp(Instant.now())
+            .hosts(List.of(host))
+            .build();
     }
 
 

@@ -52,12 +52,16 @@ public class SmtpConfig {
   }
 
   public static SmtpConfig testConfig() {
+    return testConfig(25);
+  }
+
+  public static SmtpConfig testConfig(int port) {
     return new SmtpConfig(
         DEFAULT_EHLO_DOMAIN,
         1,
         Duration.ofMinutes(3),
         Duration.ofMinutes(5),
-        25,
+        port,
         true,
         true
     );

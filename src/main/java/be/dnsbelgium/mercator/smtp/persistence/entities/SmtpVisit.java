@@ -1,46 +1,40 @@
 package be.dnsbelgium.mercator.smtp.persistence.entities;
 
 import com.github.f4b6a3.ulid.Ulid;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.slf4j.Logger;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
-@Getter
-@Setter
-@ToString
+@Data
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor
 public class SmtpVisit {
+
   private String visitId;
 
   private String domainName;
 
-  private ZonedDateTime timestamp = ZonedDateTime.now();
+  @Builder.Default
+  private Instant timestamp = Instant.now();
 
+  @Builder.Default
   private int numConversations = 0;
 
   @ToString.Exclude
+  @Builder.Default
   private List<SmtpHost> hosts = new ArrayList<>();
 
   private static final Logger logger = getLogger(SmtpVisit.class);
 
   private CrawlStatus crawlStatus;
 
-  public SmtpVisit(String visitId, String domainName) {
-    logger.debug("Creating new SmtpVisit with visitId={} and domainName={}", visitId, domainName);
-    this.visitId = visitId;
-    this.domainName = domainName;
-  }
-
   public void add(SmtpHost host) {
-    host.setVisit(this);
     hosts.add(host);
     ++numConversations;
   }

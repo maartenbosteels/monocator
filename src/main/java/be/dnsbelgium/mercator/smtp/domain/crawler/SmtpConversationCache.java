@@ -9,8 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.time.ZonedDateTime;
-import java.time.chrono.ChronoZonedDateTime;
+import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.slf4j.LoggerFactory.getLogger;
@@ -39,10 +38,10 @@ public class SmtpConversationCache {
   }
 
   public void evictEntriesOlderThan(Duration duration) {
-    ZonedDateTime notBefore = ZonedDateTime.now().minus(duration);
+    Instant notBefore = Instant.now().minus(duration);
     logger.info("Evicting entries that older than {}, so after {}", duration, notBefore);
     int entriesBefore = cache.size();
-    cache.entrySet().removeIf(e -> e.getValue().getTimestamp().isBefore(ChronoZonedDateTime.from(notBefore)));
+    cache.entrySet().removeIf(e -> e.getValue().getTimestamp().isBefore(notBefore));
     int entriesAfter = cache.size();
     logger.info("Eviction done. before cache had {} entries, now it has {} entries", entriesBefore, entriesAfter);
   }
