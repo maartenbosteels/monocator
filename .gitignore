@@ -38,3 +38,4 @@ out/
 
 local_files/
 *.duckdb
+data/

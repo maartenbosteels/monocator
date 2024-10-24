@@ -1,9 +1,14 @@
 plugins {
     id 'java'
     id 'org.springframework.boot' version '3.3.4'
-//    id 'org.springframework.boot' version '3.4.0-M3'
     id 'io.spring.dependency-management' version '1.1.6'
+    id 'com.google.cloud.tools.jib' version '3.4.4'
 }
+
+jib.container.ports = [ "8082" ]
+jib.container.volumes = [ "/root/monocator/" ]
+jib.container.environment = [ "SPRING_PROFILES_ACTIVE" : "docker" ]
+
 
 // Spring Boot 3.4.0 expected to land on November 21 2024
 // https://github.com/spring-projects/spring-boot/milestone/353
