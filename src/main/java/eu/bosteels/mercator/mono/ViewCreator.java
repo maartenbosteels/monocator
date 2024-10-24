@@ -22,7 +22,7 @@ public class ViewCreator {
     jdbcClient = JdbcClient.create(dataSource);
   }
 
-  @PostConstruct
+  //@PostConstruct
   public void createViews() {
     List<String> tableNames  = visitRepository.getTableNames();
     logger.info("tableNames = {}", tableNames);

@@ -59,8 +59,8 @@ public class SmtpConfig {
     return new SmtpConfig(
         DEFAULT_EHLO_DOMAIN,
         1,
-        Duration.ofMinutes(3),
-        Duration.ofMinutes(5),
+        Duration.ofSeconds(15),
+        Duration.ofSeconds(15),
         port,
         true,
         true
