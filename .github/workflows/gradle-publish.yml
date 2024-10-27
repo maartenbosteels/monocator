@@ -38,13 +38,10 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew build
 
-    - name: Publish to local docker registry
-      run: ./gradlew jibDockerBuild
+#    - name: Publish to local docker registry
+#      run: ./gradlew jibDockerBuild
 
-      # The USERNAME and TOKEN need to correspond to the credentials environment variables used in
-      # the publishing section of your build.gradle
-
-    - name: Publish to local docker registry
+    - name: Publish to Docker Hub
       run: ./gradlew jib -PDOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} -PDOCKERHUB_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }}
 
     - name: Log in to Docker Hub
@@ -59,16 +56,6 @@ jobs:
       with:
         images: maartenbosteels/monocator
 
-    - name: Build and push Docker image
-      id: push
-      uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
-      with:
-        image: maartenbosteels/monocator
-        registry: docker.io
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-
     - name: Generate artifact attestation
       uses: actions/attest-build-provenance@v1
       with:
@@ -76,10 +63,3 @@ jobs:
         subject-digest: ${{ steps.push.outputs.digest }}
         push-to-registry: true
         
-    # The USERNAME and TOKEN need to correspond to the credentials environment variables used in
-    # the publishing section of your build.gradle
-#    - name: Publish to GitHub Packages
-#      run: ./gradlew jib
-#      env:
-#        USERNAME: ${{ github.actor }}
-#        TOKEN: ${{ secrets.GITHUB_TOKEN }}
