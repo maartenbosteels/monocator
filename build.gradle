@@ -20,6 +20,8 @@ jib.from.platforms {
     }
 }
 jib.to.image = 'maartenbosteels/monocator'
+jib.to.auth.username=$DOCKERHUB_USERNAME
+jib.to.auth.password=$DOCKERHUB_PASSWORD
 
 // Spring Boot 3.4.0 expected to land on November 21 2024
 // https://github.com/spring-projects/spring-boot/milestone/353
