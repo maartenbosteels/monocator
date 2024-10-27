@@ -2,7 +2,7 @@ package eu.bosteels.mercator.mono.scheduling;
 
 import be.dnsbelgium.mercator.DuckDataSource;
 import be.dnsbelgium.mercator.common.VisitRequest;
-import eu.bosteels.mercator.mono.Repository;
+import eu.bosteels.mercator.mono.persistence.Repository;
 import jakarta.annotation.PostConstruct;
 import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.FileUtils;

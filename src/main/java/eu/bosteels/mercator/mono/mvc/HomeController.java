@@ -31,9 +31,13 @@ public class HomeController {
     }
 
     @GetMapping("/hello")
-    public String hello(@RequestParam(name = "search", defaultValue = "") String search) {
-        System.out.println("hello called: " + search);
+    public String hello() {
         return "hello";
+    }
+
+    @GetMapping("/test-htmx")
+    public String test_htmx() {
+        return "test-htmx";
     }
 
 

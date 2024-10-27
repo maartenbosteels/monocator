@@ -1,4 +1,4 @@
-package eu.bosteels.mercator.mono;
+package eu.bosteels.mercator.mono.persistence;
 
 import be.dnsbelgium.mercator.dns.domain.DnsCrawlResult;
 import be.dnsbelgium.mercator.dns.dto.RecordType;
@@ -19,8 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static eu.bosteels.mercator.mono.Repository.getLong;
-import static eu.bosteels.mercator.mono.Repository.zonedDateTime;
+import static eu.bosteels.mercator.mono.persistence.Repository.getLong;
+import static eu.bosteels.mercator.mono.persistence.Repository.zonedDateTime;
 import org.apache.commons.lang3.tuple.Pair;
 
 public class DnsResultsRowCallbackHandler implements RowCallbackHandler {

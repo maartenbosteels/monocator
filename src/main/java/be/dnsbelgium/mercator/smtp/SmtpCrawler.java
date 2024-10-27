@@ -6,7 +6,7 @@ import be.dnsbelgium.mercator.smtp.domain.crawler.SmtpConversationCache;
 import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpHost;
 import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpVisit;
 import be.dnsbelgium.mercator.smtp.persistence.repositories.SmtpRepository;
-import eu.bosteels.mercator.mono.CrawlerModule;
+import eu.bosteels.mercator.mono.visits.CrawlerModule;
 import groovy.util.logging.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,14 +46,26 @@ public class SmtpCrawler implements CrawlerModule<SmtpVisit> {
   }
 
   @Override
-  public void save(List<?> collectedData) {
-    for (Object item : collectedData) {
-      if (item instanceof SmtpVisit visit) {
-        smtpRepository.saveVisit(visit);
-      } else {
-        logger.error("Cannot save item of type: {}", item.getClass().getName());
-      }
+  public void saveItem(SmtpVisit visit) {
+    smtpRepository.saveVisit(visit);
+  }
+
+  public void save(Object item) {
+    if (item instanceof SmtpVisit visit) {
+      saveItem(visit);
+    } else {
+      logger.error("Cannot save item of type: {}", item.getClass().getName());
     }
+  }
+
+  @Override
+  public void save(List<?> collectedData) {
+    collectedData.forEach(this::save);
+  }
+
+  @Override
+  public void saveAll(List<SmtpVisit> collectedData) {
+    CrawlerModule.super.saveAll(collectedData);
   }
 
   @Override

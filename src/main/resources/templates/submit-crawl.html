@@ -2,21 +2,10 @@
 <html lang="en"
       xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-
->
-
-<!--layout:decorate="~{layout/main}"-->
+      layout:decorate="~{layout/layout}">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="color-scheme" content="light dark">
-    <link rel="stylesheet" th:href="@{/css/pico.min.css}">
-    <link rel="stylesheet" th:href="@{/css/pico.colors.min.css}">
-    <link rel="stylesheet" th:href="@{/css/application.css}">
-
-    <title>Mercator | Search</title>
-
+    <title>Mercator | Submit </title>
 </head>
 
 <body >
@@ -84,13 +73,10 @@
     <main class="container">
 
         <div layout:fragment="content">
-            <!-- Add content here -->
 
             <h1>Submit a crawl</h1>
-
             <p>
                 Use the form below to submit a visit request to the work queue.
-
                 Use the ingestion folder (TODO: or the upload form)
                 to submit a larger set of visit requests.
             </p>

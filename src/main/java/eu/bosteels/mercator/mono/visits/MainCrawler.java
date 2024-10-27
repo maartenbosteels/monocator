@@ -1,4 +1,4 @@
-package eu.bosteels.mercator.mono;
+package eu.bosteels.mercator.mono.visits;
 
 import be.dnsbelgium.mercator.common.VisitRequest;
 import be.dnsbelgium.mercator.dns.domain.DnsCrawlResult;
@@ -14,7 +14,7 @@ import be.dnsbelgium.mercator.vat.VatCrawlerService;
 import be.dnsbelgium.mercator.vat.crawler.persistence.VatCrawlResult;
 import be.dnsbelgium.mercator.vat.domain.Page;
 import be.dnsbelgium.mercator.vat.domain.SiteVisit;
-import eu.bosteels.mercator.mono.visits.VisitService;
+import eu.bosteels.mercator.mono.persistence.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -116,29 +116,24 @@ public class MainCrawler {
     // TODO: finish this idea
     @SuppressWarnings("unused")
     public void visit2(VisitRequest visitRequest) {
-
-        Map<String, List<?>> dataPerModule = new HashMap<>();
         logger.info("Starting visit for {}", visitRequest.getDomainName());
-
+        Map<String, List<?>> dataPerModule = new HashMap<>();
+        // GET THE DATA
         for (CrawlerModule<?> crawlerModule : crawlerModules) {
             List<?> data = crawlerModule.collectData(visitRequest);
-            String key = crawlerModule.getClass().getName();
-            dataPerModule.put(key, data);
+            dataPerModule.put(crawlerModule.key(), data);
         }
-
+        // SAVE TO DATABASE
         for (CrawlerModule<?> crawlerModule : crawlerModules) {
-            String key = crawlerModule.getClass().getName();
-            List<?> data = dataPerModule.get(key);
+            List<?> data = dataPerModule.get(crawlerModule.key());
             crawlerModule.save(data);
         }
-
+        // ADD TO CACHE etc
+        logger.info("Saved results for visit to {}", visitRequest.getDomainName());
         for (CrawlerModule<?> crawlerModule : crawlerModules) {
-            String key = crawlerModule.getClass().getName();
-            List<?> data = dataPerModule.get(key);
-            //crawlerModule.afterSave(data);
+            List<?> data = dataPerModule.get(crawlerModule.key());
+            crawlerModule.afterSave(data);
         }
-
-
     }
 
 }

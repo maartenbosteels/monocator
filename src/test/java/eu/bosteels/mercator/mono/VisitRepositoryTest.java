@@ -14,6 +14,8 @@ import be.dnsbelgium.mercator.tls.domain.certificates.Certificate;
 import be.dnsbelgium.mercator.vat.crawler.persistence.PageVisit;
 import be.dnsbelgium.mercator.vat.crawler.persistence.VatCrawlResult;
 import com.github.f4b6a3.ulid.Ulid;
+import eu.bosteels.mercator.mono.persistence.TableCreator;
+import eu.bosteels.mercator.mono.persistence.VisitRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

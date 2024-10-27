@@ -27,6 +27,7 @@ public class Page {
   // the saved body text will be abbreviated to this length
   private final static int MAX_BODY_TEXT_LENGTH = 20_000;
 
+  public static Page PAGE_TIME_OUT  = new Page();
   public static Page PAGE_TOO_BIG  = new Page();
   public static Page CONTENT_TYPE_NOT_SUPPORTED = new Page();
 
@@ -162,6 +163,9 @@ public class Page {
 
   @Override
   public String toString() {
+    if (this == PAGE_TIME_OUT) {
+      return "Page.PAGE_TIME_OUT";
+    }
     if (this == PAGE_TOO_BIG) {
       return "Page.PAGE_TOO_BIG";
     }

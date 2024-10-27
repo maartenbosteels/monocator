@@ -1,4 +1,4 @@
-package eu.bosteels.mercator.mono;
+package eu.bosteels.mercator.mono.persistence;
 
 import be.dnsbelgium.mercator.DuckDataSource;
 import jakarta.annotation.PostConstruct;

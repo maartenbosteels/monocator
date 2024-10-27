@@ -8,13 +8,24 @@ plugins {
 jib.container.ports = [ "8082" ]
 jib.container.volumes = [ "/root/monocator/" ]
 jib.container.environment = [ "SPRING_PROFILES_ACTIVE" : "docker" ]
-
+jib.from.image = "eclipse-temurin:23.0.1_11-jre-ubi9-minimal@sha256:f2521f4f7cf25f1259e5db99cda2a6a676f44c68cc452cd1cc0bbeb3f72c06f8"
+jib.from.platforms {
+    platform {
+        architecture = 'amd64'
+        os = 'linux'
+    }
+    platform {
+        architecture = 'arm64'
+        os = 'linux'
+    }
+}
+jib.to.image = 'maartenbosteels/monocator'
 
 // Spring Boot 3.4.0 expected to land on November 21 2024
 // https://github.com/spring-projects/spring-boot/milestone/353
 
 group = 'eu.bosteels'
-version = '0.0.1-SNAPSHOT'
+version = '0.0.2-SNAPSHOT'
 
 java {
     toolchain {

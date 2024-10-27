@@ -1,4 +1,4 @@
-package eu.bosteels.mercator.mono;
+package eu.bosteels.mercator.mono.visits;
 
 import be.dnsbelgium.mercator.common.VisitRequest;
 
@@ -10,9 +10,23 @@ public interface CrawlerModule <T> {
 
   void save(List<?> collectedData);
 
+  void saveItem(T item);
+
   void afterSave(List<?> collectedData);
 
   List<T> find(String visitId);
 
   void createTables();
+
+
+  default void saveAll(List<T> collectedData) {
+    for (T t : collectedData) {
+      saveItem(t);
+    }
+  }
+
+  default String key() {
+    return getClass().getName();
+  }
+
 }

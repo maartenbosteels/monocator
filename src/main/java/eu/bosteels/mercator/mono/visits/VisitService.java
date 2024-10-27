@@ -1,7 +1,6 @@
 package eu.bosteels.mercator.mono.visits;
 
-import eu.bosteels.mercator.mono.VisitRepository;
-import eu.bosteels.mercator.mono.VisitResult;
+import eu.bosteels.mercator.mono.persistence.VisitRepository;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;

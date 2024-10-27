@@ -32,3 +32,7 @@ h1 {
     text-align: left;
     margin-left: 1em;
 }
+
+.home-link a:hover {
+    text-decoration: none;
+}

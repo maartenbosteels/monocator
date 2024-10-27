@@ -5,6 +5,8 @@ import be.dnsbelgium.mercator.dns.domain.DnsCrawlResult;
 import be.dnsbelgium.mercator.dns.persistence.Request;
 import be.dnsbelgium.mercator.dns.persistence.Response;
 import be.dnsbelgium.mercator.dns.persistence.ResponseGeoIp;
+import eu.bosteels.mercator.mono.persistence.Repository;
+import eu.bosteels.mercator.mono.persistence.TableCreator;
 import eu.bosteels.mercator.mono.scheduling.CrawlRate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;

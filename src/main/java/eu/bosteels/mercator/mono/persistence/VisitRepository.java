@@ -1,4 +1,4 @@
-package eu.bosteels.mercator.mono;
+package eu.bosteels.mercator.mono.persistence;
 
 import be.dnsbelgium.mercator.DuckDataSource;
 import be.dnsbelgium.mercator.common.VisitRequest;
@@ -18,6 +18,7 @@ import be.dnsbelgium.mercator.vat.domain.Link;
 import be.dnsbelgium.mercator.vat.domain.Page;
 import be.dnsbelgium.mercator.vat.domain.SiteVisit;
 import com.github.f4b6a3.ulid.Ulid;
+import eu.bosteels.mercator.mono.visits.VisitResult;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -40,7 +41,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
-import static eu.bosteels.mercator.mono.Repository.*;
+import static eu.bosteels.mercator.mono.persistence.Repository.*;
 
 @SuppressWarnings("SqlDialectInspection")
 @Component
@@ -216,6 +217,7 @@ public class VisitRepository {
     var transactionId = transactionId();
     logger.debug("before export: transactionId = {}", transactionId);
     executeStatement("use " + databaseName);
+    executeStatement("checkpoint");
     String export = """
             export database '%s'
             (
@@ -769,7 +771,7 @@ public class VisitRepository {
   }
 
   private void savePageVisits(VisitRequest visitRequest, SiteVisit siteVisit) {
-    logger.debug("Persisting the {} page visits for {}", siteVisit.getNumberOfVisitedPages(), siteVisit.getBaseURL());
+    logger.warn("Persisting the {} page visits for {}", siteVisit.getNumberOfVisitedPages(), siteVisit.getBaseURL());
 
     for (Map.Entry<Link, Page> linkPageEntry : siteVisit.getVisitedPages().entrySet()) {
       Page page = linkPageEntry.getValue();

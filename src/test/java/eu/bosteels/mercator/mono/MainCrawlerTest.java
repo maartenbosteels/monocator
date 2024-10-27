@@ -1,6 +1,7 @@
 package eu.bosteels.mercator.mono;
 
 import be.dnsbelgium.mercator.common.VisitRequest;
+import eu.bosteels.mercator.mono.visits.MainCrawler;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.slf4j.Logger;

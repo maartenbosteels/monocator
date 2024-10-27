@@ -1,18 +1,6 @@
-# 19/10
 * test tls + caching
-* smtp
-* revert ZonedDateTime to Instant
 * Crawler interface + implementations
-* clean up visits_db files at the end of a test (or use temp folder)
             
-# smtp
-## tests
-* testCaching fails (DefaultSmtpIpAnalyzerTest)
-* longerTimeout => NioSmtpConversationFactoryTest
-* SmtpAnalyzerIntegrationTest => hangs when port 25 is blocked outbound
-* test @Timed annotation in micrometer
-
-# full crawl: smtp still todo
 
 # split up Repository class
 * SchedulerRepository for tables Done, Todo, Ingested

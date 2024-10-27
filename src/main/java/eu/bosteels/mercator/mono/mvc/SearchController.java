@@ -1,6 +1,6 @@
 package eu.bosteels.mercator.mono.mvc;
 
-import eu.bosteels.mercator.mono.Repository;
+import eu.bosteels.mercator.mono.persistence.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

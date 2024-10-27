@@ -23,8 +23,8 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static eu.bosteels.mercator.mono.Repository.instant;
-import static eu.bosteels.mercator.mono.Repository.timestamp;
+import static eu.bosteels.mercator.mono.persistence.Repository.instant;
+import static eu.bosteels.mercator.mono.persistence.Repository.timestamp;
 
 @Component
 public class SmtpRepository {
