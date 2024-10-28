@@ -111,6 +111,10 @@ class SmtpRepositoryTest {
     System.out.println("jvm = " + jvm);
     System.out.println("found.get().getTimestamp() = " + found.get().getTimestamp());
     System.out.println("found.seconds = " + found.get().getTimestamp().getEpochSecond());
+
+    assertThat(found.get().getTimestamp().getEpochSecond()).isEqualTo(visit.getTimestamp().getEpochSecond());
+    assertThat(found.get().getTimestamp().getNano()).isEqualTo(visit.getTimestamp().getNano());
+
     System.out.println("found.nano = " + found.get().getTimestamp().getNano());
     System.out.println("visit.seconds = " + visit.getTimestamp().getEpochSecond());
     System.out.println("visit.nano = " + visit.getTimestamp().getNano());
