@@ -6,6 +6,7 @@ import be.dnsbelgium.mercator.smtp.persistence.entities.CrawlStatus;
 import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpConversation;
 import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpHost;
 import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpVisit;
+import be.dnsbelgium.mercator.test.TestUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.xbill.DNS.DClass;
@@ -64,7 +65,7 @@ public class SmtpTestUtils {
           .hosts(List.of(host1, host2))
           .domainName("example.com")
           .crawlStatus(CrawlStatus.OK)
-          .timestamp(Instant.now())
+          .timestamp(TestUtils.now())
           .numConversations(2)
           .build();
     }
@@ -124,7 +125,7 @@ public class SmtpTestUtils {
         return SmtpVisit.builder()
             .visitId(visitId)
             .domainName("dnsbelgium.be")
-            .timestamp(Instant.now())
+            .timestamp(TestUtils.now())
             .hosts(List.of(host))
             .build();
     }

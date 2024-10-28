@@ -1,6 +1,7 @@
 package be.dnsbelgium.mercator.vat.domain;
 
 import be.dnsbelgium.mercator.common.VisitIdGenerator;
+import be.dnsbelgium.mercator.test.TestUtils;
 import be.dnsbelgium.mercator.vat.crawler.persistence.PageVisit;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -8,7 +9,6 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.time.Instant;
 import java.util.List;
 
 import static org.slf4j.LoggerFactory.getLogger;
@@ -19,7 +19,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 public class PageVisitRepositoryTest {
 
 
-  private static final Logger logger = getLogger(VatCrawlResultRepositoryTest.class);
+  private static final Logger logger = getLogger(PageVisitRepositoryTest.class);
 
   @Test
   @Commit
@@ -30,8 +30,8 @@ public class PageVisitRepositoryTest {
         "dnsbelgium.be",
         "http://www.dnsbelgium.be/contact",
         "/contact",
-        Instant.now(),
-        Instant.now().plusSeconds(123),
+            TestUtils.now(),
+            TestUtils.now().plusSeconds(123),
         200,
         "Wow, fancy website!",
         "<html><body><h1>Wow, fancy website!</h1></body></html>",
@@ -52,8 +52,8 @@ public class PageVisitRepositoryTest {
         "just-a-test.be",
         "http://www.just-a-test.be/null-bytes",
         "/null-bytes-\u0000",
-        Instant.now(),
-        Instant.now().plusSeconds(123),
+            TestUtils.now(),
+            TestUtils.now().plusSeconds(123),
         200,
         "Wow, binary data with \u0000 bytes",
             "<html><body><h1>Wow, binary data with \u0000 bytes</h1></body></html>",

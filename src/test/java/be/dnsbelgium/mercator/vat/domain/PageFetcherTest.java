@@ -1,6 +1,7 @@
 package be.dnsbelgium.mercator.vat.domain;
 
 
+import be.dnsbelgium.mercator.test.TestUtils;
 import be.dnsbelgium.mercator.vat.metrics.MetricName;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -45,7 +46,7 @@ class PageFetcherTest {
   @Test
   public void fetchGoogle() throws IOException {
     HttpUrl url = HttpUrl.get("http://www.google.be");
-    Instant beforeFetch = Instant.now();
+    Instant beforeFetch = TestUtils.now();
     pageFetcher.clearCache();
     Page page = pageFetcher.fetch(url);
     logger.info("page = {}", page);

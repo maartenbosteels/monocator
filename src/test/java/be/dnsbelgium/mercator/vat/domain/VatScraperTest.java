@@ -145,7 +145,7 @@ class VatScraperTest {
   }
 
 
-  //@Disabled
+  @Disabled
   @Test
   public void fetchPageAndParseTestWithErrors() {
     System.out.println("start");

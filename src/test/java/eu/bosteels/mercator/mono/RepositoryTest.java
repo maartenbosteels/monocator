@@ -5,6 +5,7 @@ import be.dnsbelgium.mercator.dns.domain.DnsCrawlResult;
 import be.dnsbelgium.mercator.dns.persistence.Request;
 import be.dnsbelgium.mercator.dns.persistence.Response;
 import be.dnsbelgium.mercator.dns.persistence.ResponseGeoIp;
+import be.dnsbelgium.mercator.test.TestUtils;
 import eu.bosteels.mercator.mono.persistence.Repository;
 import eu.bosteels.mercator.mono.persistence.TableCreator;
 import eu.bosteels.mercator.mono.scheduling.CrawlRate;
@@ -27,7 +28,7 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-import static java.time.Instant.now;
+import static be.dnsbelgium.mercator.test.TestUtils.now;
 
 @SuppressWarnings("SqlDialectInspection")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
@@ -60,7 +61,7 @@ class RepositoryTest {
     @Test
     public void saveOperation() {
         repository.saveOperation(
-                Instant.now(),
+                TestUtils.now(),
                 "export database 'abc'",
                 Duration.of(43, ChronoUnit.SECONDS)
         );

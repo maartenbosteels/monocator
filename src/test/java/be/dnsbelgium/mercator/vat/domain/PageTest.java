@@ -2,6 +2,7 @@ package be.dnsbelgium.mercator.vat.domain;
 
 import be.dnsbelgium.mercator.common.VisitIdGenerator;
 import be.dnsbelgium.mercator.common.VisitRequest;
+import be.dnsbelgium.mercator.test.TestUtils;
 import be.dnsbelgium.mercator.vat.crawler.persistence.PageVisit;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -13,9 +14,9 @@ import org.springframework.util.FileCopyUtils;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
-import java.time.Instant;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -88,7 +89,7 @@ class PageTest {
   private Page makePageFrom(String responseBody) {
     HttpUrl url = HttpUrl.get("http://www.example.com/");
     MediaType mediaType = MediaType.parse("text/html");
-    return new Page(url, Instant.now(), Instant.now().plusMillis(120), 200, responseBody, -1, mediaType);
+    return new Page(url, TestUtils.now(), TestUtils.now().plusMillis(120), 200, responseBody, -1, mediaType);
   }
 
   private String getHtml(String resourcePath) throws IOException {
@@ -126,9 +127,9 @@ class PageTest {
   }
 
   @Test
-  public void testURL() throws MalformedURLException {
+  public void testURL() throws MalformedURLException, URISyntaxException {
     String urlString = "http://www.allmatte.be/contact/#header-newsletter-signup";
-    URL url = new URL(urlString);
+    URL url = new URI(urlString).toURL();
     logger.info("urlString = {}", urlString);
     logger.info("url       = {}", url);
 
@@ -163,7 +164,7 @@ class PageTest {
     Page page = makePageFrom(html);
     logger.info("page.getLinks() = {}", page.getLinks());
     assertThat(page.getLinks()).hasSize(1);
-    String expected = page.getLinks().stream().map(link -> link.getUrl().host()).collect(Collectors.toList()).get(0);
+    String expected = page.getLinks().stream().map(link -> link.getUrl().host()).toList().get(0);
     assertThat(expected).isEqualTo("xn--caf-aaaaaaaaaaaaaaaaaaaaaaaaa-duc.be");
   }
 }

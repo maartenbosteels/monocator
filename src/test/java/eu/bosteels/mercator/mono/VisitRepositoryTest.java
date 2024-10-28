@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static be.dnsbelgium.mercator.tls.domain.certificates.CertificateReader.readTestCertificate;
-import static java.time.Instant.now;
+import static be.dnsbelgium.mercator.test.TestUtils.now;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class VisitRepositoryTest {
