@@ -25,8 +25,8 @@ public class ULIDTest {
         }
         long end = System.currentTimeMillis();
         long millis = end - start;
-        logger.info("millis = " + millis);
-        logger.info("ulids.size() = " + ulids.size());
+        logger.info("millis = {}", millis);
+        logger.info("ulids.size() = {}", ulids.size());
         assertThat(millis).isLessThan(2000);
         assertThat(ulids.size()).isEqualTo(5_000_000);
     }
