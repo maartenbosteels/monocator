@@ -60,14 +60,17 @@ public class SmtpTestUtils {
     public static SmtpVisit visit() {
         SmtpHost host1 = host(RandomStringUtils.randomAscii(8));
         SmtpHost host2 = host(RandomStringUtils.randomAscii(8));
-      return SmtpVisit.builder()
+        SmtpVisit visit = SmtpVisit.builder()
           .visitId(VisitIdGenerator.generate())
-          .hosts(List.of(host1, host2))
+          //.hosts(List.of(host1, host2))
           .domainName("example.com")
           .crawlStatus(CrawlStatus.OK)
           .timestamp(TestUtils.now())
           .numConversations(2)
           .build();
+        visit.add(host1);
+        visit.add(host2);
+        return visit;
     }
 
     public static SmtpHost host(String id) {
@@ -96,7 +99,7 @@ public class SmtpTestUtils {
             .startTlsReplyCode(230)
             .software("ACME SMTP")
             .softwareVersion("0.never")
-            .timestamp(Instant.now())
+            .timestamp(TestUtils.now())
             .supportedExtensions(Set.of("SMTPUTF8", "SIZE 157286400"))
             .errorMessage("Connection timed out")
             .error(Error.TIME_OUT)
@@ -116,6 +119,7 @@ public class SmtpTestUtils {
             .country("Jamaica \u0000")
             .asnOrganisation("Happy \u0000 Green grass")
             .asn(654L)
+            .timestamp(TestUtils.now())
             .build();
         SmtpHost host = SmtpHost.builder()
             .id(RandomStringUtils.randomAlphanumeric(10))

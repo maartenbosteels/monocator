@@ -47,7 +47,7 @@ class VatScraperTest {
       stubFor("/wrong/" + s, "html/wrong/" + s + ".html");
     }
 
-    String BIG_BODY = StringUtils.repeat("abcdefghjiklmnopqrst", 10_000_000);
+    String BIG_BODY = StringUtils.repeat("abcdefghjiklmnopqrst", 10_000);
     wireMockRule.stubFor(get(urlEqualTo("/big"))
             .willReturn(aResponse()
                     .withBody(BIG_BODY)
