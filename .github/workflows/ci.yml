@@ -41,3 +41,12 @@ jobs:
           include_passed: true
 #          flaky_summary: true
 
+      - name: Report
+        uses: dorny/test-reporter@v1.9.1
+        if: always()
+        with:
+          name: Junit Tests
+          path: '**/build/test-results/test/TEST-*.xml'
+          # target/surefire-reports/*.xml
+          reporter: java-junit
+          fail-on-error: true
