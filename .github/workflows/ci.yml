@@ -38,5 +38,6 @@ jobs:
         with:
           report_paths: '**/build/test-results/test/TEST-*.xml'
           detailed_summary: true
+          include_passed: true
 #          flaky_summary: true
 
