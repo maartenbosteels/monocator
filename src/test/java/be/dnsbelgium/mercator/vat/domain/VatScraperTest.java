@@ -27,7 +27,6 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.slf4j.LoggerFactory.getLogger;
 
-@Disabled
 class VatScraperTest {
 
   private VatScraper vatScraper;
@@ -47,6 +46,19 @@ class VatScraperTest {
     for (String s : new String[]{"wrong-checksum", "wrong-format"}) {
       stubFor("/wrong/" + s, "html/wrong/" + s + ".html");
     }
+
+    String BIG_BODY = StringUtils.repeat("abcdefghjiklmnopqrst", 10_000_000);
+    wireMockRule.stubFor(get(urlEqualTo("/big"))
+            .willReturn(aResponse()
+                    .withBody(BIG_BODY)
+                    .withHeader("Content-Type", "text/html; charset=UTF-8"))
+    );
+//    wireMockRule.stubFor(get(urlEqualTo("/big"))
+//            .willReturn(aResponse()
+//                    .withBody("hello")
+//                    .withHeader("Content-Type", "text/html; charset=UTF-8"))
+//    );
+
     wireMockRule.start();
     PageFetcher pageFetcher = new PageFetcher(meterRegistry, PageFetcherConfig.defaultConfig());
     LinkPrioritizer linkPrioritizer = new LinkPrioritizer();
@@ -132,8 +144,34 @@ class VatScraperTest {
     );
   }
 
+
+  //@Disabled
   @Test
+  public void fetchPageAndParseTestWithErrors() {
+    System.out.println("start");
+    //String BIG_BODY = StringUtils.repeat("abcdefghjiklmnopqrst", 10_000_000);
+    PageFetcher testFetcher = new PageFetcher(meterRegistry, TestPageFetcherConfig.testConfig());
+    System.out.println("testFetcher created");
+    testFetcher.clearCache();
+    System.out.println("cache cleared");
+    VatScraper testVatScraper = new VatScraper(meterRegistry, testFetcher, new VatFinder(), new LinkPrioritizer());
+    System.out.println("testVatScraper = " + testVatScraper);
+
+    //baseUrl = mockWebServer.url("/");
+
+    HttpUrl baseUrl = urlFor("/");
+
+    Page page1 = testVatScraper.fetchAndParse(baseUrl);
+    assertThat(page1).isEqualTo(null);
+    testFetcher.clearCache();
+    Page page2 = testVatScraper.fetchAndParse(baseUrl);
+    logger.info("page = {}", page2);
+    assertThat(page2.getStatusCode()).isEqualTo(200);
+    assertThat(page2.getResponseBody()).isEqualTo("test");
+  }
+
   @Disabled
+  @Test
   public void fetchPageAndParseTestWith1PageThatErrors() throws IOException {
     HttpUrl baseUrl;
     String BIG_BODY = StringUtils.repeat("abcdefghjiklmnopqrst", 10_000_000);

@@ -48,8 +48,8 @@ class SmtpRepositoryTest {
     assertThat(found.isPresent()).isTrue();
     assertThat(found.get().getVisitId()).isEqualTo(visit.getVisitId());
     assertThat(found.get().getCrawlStatus()).isEqualTo(visit.getCrawlStatus());
-    // debugging github runner    //assertThat(found.get().getHosts()).isEqualTo(visit.getHosts());
-    //assertThat(found.get()).isEqualTo(visit);
+    assertThat(found.get().getHosts()).isEqualTo(visit.getHosts());
+    assertThat(found.get()).isEqualTo(visit);
   }
 
 
@@ -89,16 +89,16 @@ class SmtpRepositoryTest {
     assertThat(found.get().getBanner()).isEqualTo("Welcome to Acme SMTP server");
     assertThat(found.get().getSoftware()).isEqualTo("ACME SMTP");
     assertThat(found.get().getSoftwareVersion()).isEqualTo("0.never");
-//    assertThat(found.get().getTimestamp()).isEqualTo(instant);
-//    assertThat(found.get().getErrorMessage()).isEqualTo("Connection timed out");
-//    assertThat(found.get().isConnectOK()).isEqualTo(true);
-//    assertThat(found.get().isStartTlsOk()).isEqualTo(true);
-//    assertThat(found.get().getConnectReplyCode()).isEqualTo(220);
-//    assertThat(found.get().getStartTlsReplyCode()).isEqualTo(230);
-//    assertThat(found.get().getConnectionTimeMs()).isEqualTo(123L);
-//    assertThat(found.get().getIpVersion()).isEqualTo(4);
-//    assertThat(found.get().getSupportedExtensions()).isEqualTo(smtpConversation.getSupportedExtensions());
-//    assertThat(found.get()).isEqualTo(smtpConversation);
+    assertThat(found.get().getTimestamp()).isEqualTo(instant);
+    assertThat(found.get().getErrorMessage()).isEqualTo("Connection timed out");
+    assertThat(found.get().isConnectOK()).isEqualTo(true);
+    assertThat(found.get().isStartTlsOk()).isEqualTo(true);
+    assertThat(found.get().getConnectReplyCode()).isEqualTo(220);
+    assertThat(found.get().getStartTlsReplyCode()).isEqualTo(230);
+    assertThat(found.get().getConnectionTimeMs()).isEqualTo(123L);
+    assertThat(found.get().getIpVersion()).isEqualTo(4);
+    assertThat(found.get().getSupportedExtensions()).isEqualTo(smtpConversation.getSupportedExtensions());
+    assertThat(found.get()).isEqualTo(smtpConversation);
   }
 
   @Test
@@ -107,7 +107,7 @@ class SmtpRepositoryTest {
     smtpRepository.saveVisit(visit);
     Optional<SmtpVisit> found = smtpRepository.findVisit(visit.getVisitId());
     assertThat(found.isPresent()).isTrue();
-    //debug github runner, assertThat(found.get()).isEqualTo(visit);
+    assertThat(found.get()).isEqualTo(visit);
   }
 
   @Test

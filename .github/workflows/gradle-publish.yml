@@ -37,12 +37,12 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
 
-    - name: Build with Gradle
-      run: ./gradlew build
+#    - name: Build with Gradle
+#      run: ./gradlew clean build
 
-    - name: Publish to Docker Hub
+    - name: Build with Gradle & publish to Docker Hub
       id: publish
-      run: ./gradlew jib -PDOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} -PDOCKERHUB_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }}
+      run: ./gradlew clean build jib -PDOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} -PDOCKERHUB_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }}
 
 #    - name: Log in to Docker Hub
 #      uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
