@@ -107,6 +107,13 @@ class SmtpRepositoryTest {
     smtpRepository.saveVisit(visit);
     Optional<SmtpVisit> found = smtpRepository.findVisit(visit.getVisitId());
     assertThat(found.isPresent()).isTrue();
+    String jvm = System.getProperty("java.version");
+    System.out.println("jvm = " + jvm);
+    System.out.println("found.get().getTimestamp() = " + found.get().getTimestamp());
+    System.out.println("found.seconds = " + found.get().getTimestamp().getEpochSecond());
+    System.out.println("found.nano = " + found.get().getTimestamp().getNano());
+    System.out.println("visit.seconds = " + visit.getTimestamp().getEpochSecond());
+    System.out.println("visit.nano = " + visit.getTimestamp().getNano());
     assertThat(found.get()).isEqualTo(visit);
   }
 
