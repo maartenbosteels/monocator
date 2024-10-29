@@ -18,6 +18,7 @@ import eu.bosteels.mercator.mono.persistence.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
@@ -40,6 +41,9 @@ public class MainCrawler {
     private final VisitService visitService;
 
     private final List<CrawlerModule<?>> crawlerModules;
+
+    @Value("${smtp.enabled:true}")
+    private boolean smtpEnabled;
 
     private static final Logger logger = LoggerFactory.getLogger(MainCrawler.class);
 
@@ -100,8 +104,13 @@ public class MainCrawler {
         }
         TlsCrawlResult tlsCrawlResult = tlsCrawler.visit(visitRequest);
         // TODO
-        //var list = smtpCrawler.collectData(visitRequest);
         SmtpVisit smtpVisit = new SmtpVisit();
+        if (smtpEnabled) {
+            logger.info("crawling SMTP for {}", visitRequest.getDomainName());
+            var list = smtpCrawler.collectData(visitRequest);
+            logger.info("DONE crawling SMTP for {} => {}", visitRequest.getDomainName(), list);
+            smtpVisit = list.getFirst();
+        }
         return new VisitResult(
                 visitRequest,
                 dnsCrawlResult,

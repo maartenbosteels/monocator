@@ -7,6 +7,7 @@ import be.dnsbelgium.mercator.dns.persistence.Request;
 import be.dnsbelgium.mercator.dns.persistence.Response;
 import be.dnsbelgium.mercator.dns.persistence.ResponseGeoIp;
 import be.dnsbelgium.mercator.feature.extraction.persistence.HtmlFeatures;
+import be.dnsbelgium.mercator.smtp.SmtpCrawler;
 import be.dnsbelgium.mercator.tls.crawler.persistence.entities.CertificateEntity;
 import be.dnsbelgium.mercator.tls.crawler.persistence.entities.CrawlResultEntity;
 import be.dnsbelgium.mercator.tls.crawler.persistence.entities.FullScanEntity;
@@ -54,6 +55,8 @@ public class VisitRepository {
 
   private final static Duration WARN_AFTER = Duration.ofSeconds(5);
 
+  private final SmtpCrawler smtpCrawler;
+
   private int databaseCounter = 0;
   private String databaseName;
   private File databaseFile;
@@ -85,10 +88,11 @@ public class VisitRepository {
   boolean ulidInDatabaseName;
 
   @Autowired
-  public VisitRepository(DuckDataSource dataSource, TableCreator tableCreator) {
+  public VisitRepository(DuckDataSource dataSource, TableCreator tableCreator, SmtpCrawler smtpCrawler) {
     this.jdbcTemplate = new JdbcTemplate(dataSource);
     this.jdbcClient = JdbcClient.create(dataSource);
     this.tableCreator = tableCreator;
+    this.smtpCrawler = smtpCrawler;
   }
 
   @Transactional
@@ -152,6 +156,9 @@ public class VisitRepository {
       for (CrawlResult crawlResult : visitResult.tlsCrawlResult().crawlResults()) {
         persist(crawlResult);
       }
+
+      smtpCrawler.saveItem(visitResult.smtpVisit());
+
 
     } catch (Exception e) {
       logger.info("save on {} started at {} failed", dbName, start);

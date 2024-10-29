@@ -7,6 +7,8 @@ import be.dnsbelgium.mercator.dns.dto.RecordType;
 import be.dnsbelgium.mercator.dns.persistence.Request;
 import be.dnsbelgium.mercator.dns.persistence.Response;
 import be.dnsbelgium.mercator.feature.extraction.persistence.HtmlFeatures;
+import be.dnsbelgium.mercator.smtp.SmtpCrawler;
+import be.dnsbelgium.mercator.smtp.persistence.repositories.SmtpRepository;
 import be.dnsbelgium.mercator.tls.crawler.persistence.entities.CertificateEntity;
 import be.dnsbelgium.mercator.tls.crawler.persistence.entities.CrawlResultEntity;
 import be.dnsbelgium.mercator.tls.crawler.persistence.entities.FullScanEntity;
@@ -43,6 +45,7 @@ class VisitRepositoryTest {
 
   static DuckDataSource dataSource;
   static VisitRepository visitRepository;
+  static SmtpCrawler smtpCrawler;
   static JdbcClient jdbcClient;
 
   @TempDir
@@ -53,10 +56,12 @@ class VisitRepositoryTest {
   @BeforeAll
   public static void init() {
     dataSource = new DuckDataSource("jdbc:duckdb:");
-    TableCreator tableCreator = new TableCreator(dataSource);
+    SmtpRepository smtpRepository = new SmtpRepository(dataSource);
+    smtpCrawler = new SmtpCrawler(smtpRepository, null, null);
+    TableCreator tableCreator = new TableCreator(dataSource, smtpCrawler);
     tableCreator.init();
     tableCreator.createVisitTables();
-    visitRepository = new VisitRepository(dataSource, tableCreator);
+    visitRepository = new VisitRepository(dataSource, tableCreator, smtpCrawler);
     visitRepository.setDatabaseDirectory(tempDir);
     visitRepository.setExportDirectory(tempDir);
     visitRepository.init();

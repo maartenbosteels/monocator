@@ -6,6 +6,10 @@ import be.dnsbelgium.mercator.smtp.persistence.entities.CrawlStatus;
 import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpConversation;
 import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpHost;
 import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpVisit;
+import com.github.f4b6a3.ulid.Ulid;
+import org.duckdb.user.DuckDBUserArray;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -31,6 +35,7 @@ public class SmtpRepository {
 
   private final DataSource dataSource;
   private final JdbcClient jdbcClient;
+  private static final Logger logger = LoggerFactory.getLogger(SmtpRepository.class);
 
   public SmtpRepository(DataSource dataSource) {
     this.dataSource = dataSource;
@@ -62,6 +67,7 @@ public class SmtpRepository {
         )
         """;
     jdbcClient.sql(ddl_conversation).update();
+    logger.info("Done executing sql \n {}", ddl_conversation);
     String smtp_host = """
         create table if not exists smtp_host
         (
@@ -74,6 +80,7 @@ public class SmtpRepository {
         )
         """;
     jdbcClient.sql(smtp_host).update();
+    logger.info("Done executing sql \n {}", smtp_host);
     String smtp_visit = """
           create table if not exists smtp_visit
           (
@@ -85,6 +92,7 @@ public class SmtpRepository {
           )
         """;
     jdbcClient.sql(smtp_visit).update();
+    logger.info("Done executing sql \n {}", smtp_visit);
   }
 
   private static class SmtpConversationMapper implements RowMapper<SmtpConversation> {
@@ -181,11 +189,15 @@ public class SmtpRepository {
         .addValue("num_conversations", smtpVisit.getNumConversations())
         .addValue("crawl_status", crawl_status);
     insert.execute(parameters);
+    logger.info("insert into smtp_visit with params {}", parameters);
     smtpVisit.getHosts().forEach(smtpHost -> saveHost(smtpVisit, smtpHost));
   }
 
   void saveHost(SmtpVisit smtpVisit, SmtpHost smtpHost) {
-    saveConversation(smtpHost.getConversation());
+    SmtpConversation conversation = smtpHost.getConversation();
+    conversation.setId(Ulid.fast().toString());
+    smtpHost.setId(Ulid.fast().toString());
+    saveConversation(conversation);
     SimpleJdbcInsert insert = new SimpleJdbcInsert(dataSource)
         .withTableName("smtp_host")
         .withoutTableColumnMetaDataAccess()
@@ -196,7 +208,8 @@ public class SmtpRepository {
         .addValue("from_mx", smtpHost.isFromMx())
         .addValue("host_name", smtpHost.getHostName())
         .addValue("priority", smtpHost.getPriority())
-        .addValue("conversation", smtpHost.getConversation().getId());
+        .addValue("conversation", conversation.getId());
+    logger.info("insert into smtp_host with params {}", parameters);
     insert.execute(parameters);
   }
 
@@ -229,11 +242,15 @@ public class SmtpRepository {
         .addValue("software_version", conversation.getSoftwareVersion())
         .addValue("timestamp", timestamp(conversation.getTimestamp()))
         .addValue("supportedExtensions", extensions);
+    logger.info("insert into smtp_conversation with params {}", parameters);
     insert.execute(parameters);
   }
 
   private Array array(Collection<String> collection) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    if (collection == null) {
+      return new DuckDBUserArray("text", new Object[0]);
+    }
     return jdbcTemplate.execute(
         (ConnectionCallback<Array>) con ->
             con.createArrayOf("text", collection.toArray())

@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.utility.MountableFile;
 
 import java.net.InetAddress;
 import java.security.KeyManagementException;
@@ -17,6 +16,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import static be.dnsbelgium.mercator.smtp.SmtpTestUtils.ip;
+import static be.dnsbelgium.mercator.smtp.domain.crawler.Mailpit.getMailPitContainer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -25,17 +25,10 @@ public class NioSmtpConversationIntegrationTest {
   private static final Logger logger = getLogger(NioSmtpConversationIntegrationTest.class);
   private final SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
 
-  public static final String MAILPIT_IMAGE_NAME = "axllent/mailpit:v1.20";
-
   @SneakyThrows
   @Test
   public void talk() {
-    var mailpit = new GenericContainer<>(MAILPIT_IMAGE_NAME)
-        .withExposedPorts(1025, 8025)
-        .withCopyToContainer(MountableFile.forClasspathResource("test-certificates/smtp-tls-cert.pem"), "/var/mailpit.cert.pem")
-        .withCopyToContainer(MountableFile.forClasspathResource("test-certificates/smtp-tls-key.pem"), "/var/mailpit.key.pem")
-        .withEnv("MP_SMTP_TLS_CERT", "/var/mailpit.cert.pem")
-        .withEnv("MP_SMTP_TLS_KEY",  "/var/mailpit.key.pem");
+    GenericContainer<?> mailpit = getMailPitContainer(true);
     mailpit.start();
     var smtpConfig = SmtpConfig.testConfig(mailpit.getMappedPort(1025));
     var conversationFactory = new NioSmtpConversationFactory(meterRegistry, smtpConfig);
@@ -62,7 +55,7 @@ public class NioSmtpConversationIntegrationTest {
   @SneakyThrows
   @Test
   public void noTls() {
-    var mailpit = new GenericContainer<>(MAILPIT_IMAGE_NAME).withExposedPorts(1025, 8025);
+    var mailpit = getMailPitContainer(false);
     mailpit.start();
     int port = mailpit.getMappedPort(1025);
     var smtpConfig = new SmtpConfig("x", 1, Duration.ofMinutes(3), Duration.ofMinutes(3), port, true, true);

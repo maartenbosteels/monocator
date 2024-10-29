@@ -42,6 +42,7 @@ public class SmtpCrawler implements CrawlerModule<SmtpVisit> {
   @Override
   public List<SmtpVisit> collectData(VisitRequest visitRequest) {
     SmtpVisit smtpVisit = smtpAnalyzer.visit(visitRequest.getDomainName());
+    smtpVisit.setVisitId(visitRequest.getVisitId());
     return List.of(smtpVisit);
   }
 

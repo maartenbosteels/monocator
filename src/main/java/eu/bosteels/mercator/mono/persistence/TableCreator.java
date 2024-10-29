@@ -1,6 +1,7 @@
 package eu.bosteels.mercator.mono.persistence;
 
 import be.dnsbelgium.mercator.DuckDataSource;
+import be.dnsbelgium.mercator.smtp.SmtpCrawler;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,9 +16,12 @@ public class TableCreator {
     private final JdbcTemplate template;
     private static final Logger logger = LoggerFactory.getLogger(TableCreator.class);
 
+    private final SmtpCrawler smtpCrawler;
+
     @Autowired
-    public TableCreator(DuckDataSource dataSource) {
+    public TableCreator(DuckDataSource dataSource, SmtpCrawler smtpCrawler) {
         this.template = new JdbcTemplate(dataSource);
+        this.smtpCrawler = smtpCrawler;
     }
 
     @PostConstruct
@@ -32,6 +36,7 @@ public class TableCreator {
         createTableFeatures();
         createTablesTls();
         blacklistEntry();
+        smtpCrawler.createTables();
     }
 
     private void createWorkTables() {
@@ -72,7 +77,7 @@ public class TableCreator {
     private void execute(String sql) {
         logger.info("Start executing sql = {}", sql);
         template.execute(sql);
-        logger.info("Done executing sql = {}", sql);
+        logger.info("Done executing sql {}", sql);
     }
 
     public void createSequence() {

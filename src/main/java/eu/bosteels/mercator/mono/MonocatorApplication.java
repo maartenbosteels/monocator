@@ -7,6 +7,7 @@ import eu.bosteels.mercator.mono.scheduling.WorkQueue;
 import jakarta.jms.ConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -63,7 +64,7 @@ public class MonocatorApplication {
 
   @Bean
   public JmsListenerContainerFactory<?> myFactory(
-          ConnectionFactory connectionFactory,
+          @Qualifier("jmsConnectionFactory") ConnectionFactory connectionFactory,
           DefaultJmsListenerContainerFactoryConfigurer configurer) {
     DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
     // This provides all auto-configured defaults to this factory, including the message converter
