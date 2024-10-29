@@ -12,7 +12,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Builder
@@ -67,14 +66,18 @@ public class SmtpConversation {
   // SMTP software version detected from banner (wild guess, easy to spoof)
   private String softwareVersion;
 
-  @Builder.Default
-  private Instant timestamp = Instant.now();
+  private final Instant timestamp;
 
   private final static String NULL_BYTE = "\u0000";
   private final static String EMPTY_STRING = "";
 
+  public SmtpConversation() {
+    this.timestamp = Instant.now();
+  }
+
   public SmtpConversation(InetAddress ip) {
     this.ip = ip.getHostAddress();
+    this.timestamp = Instant.now();
     if (ip instanceof Inet4Address) {
       ipVersion = 4;
     }

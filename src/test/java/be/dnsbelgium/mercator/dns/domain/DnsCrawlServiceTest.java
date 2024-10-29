@@ -11,18 +11,13 @@ import be.dnsbelgium.mercator.dns.persistence.Request;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.rng.UniformRandomProvider;
 import org.apache.commons.rng.simple.RandomSource;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.metrics.CompositeMeterRegistryAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.TestPropertySource;
 //import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.xbill.DNS.Name;
@@ -39,9 +34,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@SuppressWarnings("SpringBootApplicationProperties")
-@SpringJUnitConfig({DnsCrawlService.class, MetricsAutoConfiguration.class, CompositeMeterRegistryAutoConfiguration.class})
-@TestPropertySource(properties = {"crawler.dns.geoIP.enabled=true", "spring.profiles.active=local"})
+@SpringJUnitConfig({
+        DnsCrawlService.class,
+        MetricsAutoConfiguration.class,
+        CompositeMeterRegistryAutoConfiguration.class
+})
 class DnsCrawlServiceTest {
 
   //@MockitoBean
@@ -63,12 +60,6 @@ class DnsCrawlServiceTest {
 
   private static final Logger logger = LoggerFactory.getLogger(DnsCrawlServiceTest.class);
 
-  @Captor
-  ArgumentCaptor<List<Request>> requestListArgCaptor;
-
-  @Value("${crawler.dns.geoIP.enabled}")
-  boolean geoIpEnabled;
-
   // The actual String values have no impact on the tests, it just looks a bit better to use realistic data
   public static final String IP1 = "10.20.30.40";
   public static final String IP2 = "20.20.30.40";
@@ -79,15 +70,11 @@ class DnsCrawlServiceTest {
   public static final String SOA_RDATA = "ns1.dns.be. be-hostmaster.dnsbelgium.be. 2020144915 10800 1800 3600000 3600";
 
   @Test
-  void geoIpShouldBeEnabled() {
-    assertThat(geoIpEnabled).isTrue();
-  }
-
-  @Test
   public void invalidDomainNameIsIgnored() {
     VisitRequest visitRequest = make("--invalid--.be");
     var x = dnsCrawlService.retrieveDnsRecords(visitRequest);
     System.out.println("x = " + x);
+    System.out.println("x.getStatus = " + x.getStatus());
     verify(enricher, never()).enrichResponses(any());
     //verify(requestRepository, never()).saveAll(any());
     verify(dnsResolver, never()).lookup(any(String.class), any(Name.class), any(RecordType.class));
@@ -99,7 +86,6 @@ class DnsCrawlServiceTest {
 
 
   @Test
-  @Disabled // todo
   public void query_for_ascii_and_save_unicode() {
     VisitRequest visitRequest = make( "dnsbelgië.be");
     when(dnsCrawlerConfig.getSubdomains()).thenReturn(new HashMap<>(Map.of(
@@ -110,12 +96,9 @@ class DnsCrawlServiceTest {
     expectResponses("@", A,   a_label , "10.20.30.40");
     expectResponses("@", SOA, a_label, "a SOA record");
     expectResponses("www", A, a_label);
-
-    dnsCrawlService.retrieveDnsRecords(visitRequest);
-
+    DnsCrawlResult dnsCrawlResult = dnsCrawlService.retrieveDnsRecords(visitRequest);
     verify(enricher).enrichResponses(any());
-    //verify(requestRepository).saveAll(requestListArgCaptor.capture());
-    List<Request> requests = requestListArgCaptor.getValue();
+    List<Request> requests = dnsCrawlResult.getRequests();
     logger.info("requests.size = {}", requests.size());
     for (Request request : requests) {
       logRequest(request);
@@ -130,15 +113,14 @@ class DnsCrawlServiceTest {
   }
 
   @Test
-  @Disabled // todo
   void only_one_lookup_done_when_first_response_is_nxdomain() throws TextParseException {
     VisitRequest visitRequest = make( "dnsbelgium.be");
     Name dnsbelgium = Name.fromString("dnsbelgium.be");
     DnsRequest expected_A = nxdomain("@", A);
     when(dnsResolver.lookup("@", dnsbelgium, A)).thenReturn(expected_A);
-    dnsCrawlService.retrieveDnsRecords(visitRequest);
-    //verify(requestRepository).saveAll(requestListArgCaptor.capture());
-    List<Request> requests = requestListArgCaptor.getValue();
+    DnsCrawlResult dnsCrawlResult = dnsCrawlService.retrieveDnsRecords(visitRequest);
+    logger.info("dnsCrawlResult = {}", dnsCrawlResult);
+    List<Request> requests = dnsCrawlResult.getRequests();
     assertThat(requests).hasSize(1);
     assertThat(requests.get(0).isOk()).isFalse();
     assertThat(requests.get(0).getProblem()).isEqualTo("nxdomain");
@@ -174,9 +156,7 @@ class DnsCrawlServiceTest {
     assertThat(request.getResponses().get(1).getRecordData()).isEqualTo(IP2);
     assertThat(request.getResponses().get(0).getTtl()).isEqualTo(TTL);
     assertThat(request.getResponses().get(1).getTtl()).isEqualTo(TTL);
-    // enricher and repository are NOT called by buildEntity() but afterwards
     verify(enricher, never()).enrichResponses(any());
-    //verify(requestRepository, never()).saveAll(any());
   }
 
   private void logRequest(Request request) {
@@ -206,7 +186,6 @@ class DnsCrawlServiceTest {
   }
 
   @Test
-  @Disabled // todo
   void retrieve_A_and_SOA_Records_for_apex_and_A_and_AAAA_for_www() throws TextParseException {
     Name dnsbelgium = Name.fromString("dnsbelgium.be");
     when(dnsCrawlerConfig.getSubdomains()).thenReturn(new HashMap<>(Map.of(
@@ -220,9 +199,8 @@ class DnsCrawlServiceTest {
     expectResponses("www", A,    dnsbelgium, IP3);
     expectResponses("www", AAAA, dnsbelgium, IPv6);
     VisitRequest visitRequest = make( "dnsbelgium.be");
-    dnsCrawlService.retrieveDnsRecords(visitRequest);
-    //verify(requestRepository).saveAll(requestListArgCaptor.capture());
-    List<Request> requestsSaved = requestListArgCaptor.getValue();
+    DnsCrawlResult dnsCrawlResult = dnsCrawlService.retrieveDnsRecords(visitRequest);
+    List<Request> requestsSaved = dnsCrawlResult.getRequests();
     for (Request request : requestsSaved) {
       logRequest(request);
     }
@@ -268,7 +246,7 @@ class DnsCrawlServiceTest {
   }
 
   @Test
-  @Disabled     // TODO
+  //@Disabled
   void find_all_that_we_search_for() {
     when(dnsCrawlerConfig.getSubdomains()).thenReturn(new HashMap<>(Map.of(
         "@", List.of(SOA, A, AAAA, CAA, MX, TXT, CNAME),
@@ -280,10 +258,8 @@ class DnsCrawlServiceTest {
             .thenReturn(randomNonEmptyResponse());
 
     VisitRequest visitRequest = make( "dnsbelgium.be");
-    dnsCrawlService.retrieveDnsRecords(visitRequest);
-    // verify(requestRepository).saveAll(requestListArgCaptor.capture());
-    // requestListArgCaptor.capture();
-    List<Request> requests = requestListArgCaptor.getValue();
+    DnsCrawlResult dnsCrawlResult = dnsCrawlService.retrieveDnsRecords(visitRequest);
+    List<Request> requests = dnsCrawlResult.getRequests();
     logger.info("requests.size = {}", requests.size());
     for (Request request : requests) {
       logRequest(request);
@@ -292,7 +268,6 @@ class DnsCrawlServiceTest {
     verify(enricher, times(1)).enrichResponses(any());
   }
 
-  @SuppressWarnings("deprecation")
   private DnsRequest randomNonEmptyResponse() {
     List<RRecord> records = new ArrayList<>();
     int numResponses = rng.nextInt(1,5);
@@ -303,7 +278,6 @@ class DnsCrawlServiceTest {
   }
 
   @Test
-  @Disabled // todo
   void only_find_A_at_apex() {
     when(dnsCrawlerConfig.getSubdomains()).thenReturn(new HashMap<>(Map.of(
         "@", List.of(SOA, A, AAAA, CAA, MX, TXT, CNAME),
@@ -318,10 +292,8 @@ class DnsCrawlServiceTest {
             .thenReturn(noResponses);
 
     VisitRequest visitRequest = make( "dnsbelgium.be");
-    dnsCrawlService.retrieveDnsRecords(visitRequest);
-    //verify(requestRepository).saveAll(requestListArgCaptor.capture());
-
-    List<Request> requests = requestListArgCaptor.getValue();
+    DnsCrawlResult dnsCrawlResult = dnsCrawlService.retrieveDnsRecords(visitRequest);
+    List<Request> requests = dnsCrawlResult.getRequests();
     logger.info("requests.size = {}", requests.size());
     for (Request request : requests) {
       logRequest(request);

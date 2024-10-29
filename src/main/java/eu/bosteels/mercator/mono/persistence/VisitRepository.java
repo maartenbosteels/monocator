@@ -142,23 +142,36 @@ public class VisitRepository {
 
       attachAndUse();
 
-      for (HtmlFeatures htmlFeatures : visitResult.featuresList()) {
-        save(htmlFeatures);
+      // added ugly null checks for now, until we refactor towards CrawlerModule's
+      if (visitResult.featuresList() != null) {
+        for (HtmlFeatures htmlFeatures : visitResult.featuresList()) {
+          save(htmlFeatures);
+        }
       }
-      save(visitResult.dnsCrawlResult());
 
-      save(visitResult.vatCrawlResult());
-      savePageVisits(visitResult.visitRequest(), visitResult.siteVisit());
+      if (visitResult.dnsCrawlResult() != null) {
+        save(visitResult.dnsCrawlResult());
+      }
 
+      if (visitResult.vatCrawlResult() != null) {
+        save(visitResult.vatCrawlResult());
+      }
+
+      if (visitResult.siteVisit() != null) {
+        savePageVisits(visitResult.visitRequest(), visitResult.siteVisit());
+      }
+
+      if (visitResult.tlsCrawlResult() != null) {
+        for (CrawlResult crawlResult : visitResult.tlsCrawlResult().crawlResults()) {
+          persist(crawlResult);
+        }
+      }
+
+      if (visitResult.smtpVisit() != null) {
+        smtpCrawler.saveItem(visitResult.smtpVisit());
+      }
       var duration = Duration.between(start, Instant.now());
       logger.debug("Done saving VisitResult for {}, took {}", visitResult.visitRequest(), duration);
-
-      for (CrawlResult crawlResult : visitResult.tlsCrawlResult().crawlResults()) {
-        persist(crawlResult);
-      }
-
-      smtpCrawler.saveItem(visitResult.smtpVisit());
-
 
     } catch (Exception e) {
       logger.info("save on {} started at {} failed", dbName, start);

@@ -204,6 +204,7 @@ public class SmtpAnalyzer {
       logger.debug("Found conversation in the cache: {}", cachedConversation);
       return cachedConversation;
     } else {
+      logger.debug("Not found in the cache: {}", ip);
       SmtpConversation conversation = smtpIpAnalyzer.crawl(address);
       logger.debug("done crawling ip {}", address);
       return conversation;

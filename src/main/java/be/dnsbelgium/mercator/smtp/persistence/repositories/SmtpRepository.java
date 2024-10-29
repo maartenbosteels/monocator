@@ -195,9 +195,14 @@ public class SmtpRepository {
 
   void saveHost(SmtpVisit smtpVisit, SmtpHost smtpHost) {
     SmtpConversation conversation = smtpHost.getConversation();
-    conversation.setId(Ulid.fast().toString());
+    if (conversation.getId() == null) {
+      conversation.setId(Ulid.fast().toString());
+      saveConversation(conversation);
+      logger.debug("not from cache: {}", conversation);
+    } else {
+      logger.debug("from cache: {}", conversation);
+    }
     smtpHost.setId(Ulid.fast().toString());
-    saveConversation(conversation);
     SimpleJdbcInsert insert = new SimpleJdbcInsert(dataSource)
         .withTableName("smtp_host")
         .withoutTableColumnMetaDataAccess()

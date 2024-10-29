@@ -1,6 +1,7 @@
 package eu.bosteels.mercator.mono.visits;
 
 import be.dnsbelgium.mercator.common.VisitRequest;
+import be.dnsbelgium.mercator.dns.CrawlStatus;
 import be.dnsbelgium.mercator.dns.domain.DnsCrawlResult;
 import be.dnsbelgium.mercator.dns.domain.DnsCrawlService;
 import be.dnsbelgium.mercator.feature.extraction.HtmlFeatureExtractor;
@@ -78,13 +79,32 @@ public class MainCrawler {
     }
 
     private void postSave(VisitResult visitResult) {
-        for (CrawlResult crawlResult: visitResult.tlsCrawlResult().crawlResults()) {
-            tlsCrawler.addToCache(crawlResult);
+        if (visitResult.tlsCrawlResult() != null) {
+            for (CrawlResult crawlResult: visitResult.tlsCrawlResult().crawlResults()) {
+                tlsCrawler.addToCache(crawlResult);
+            }
+        }
+        if (visitResult.smtpVisit() != null) {
+            smtpCrawler.afterSave(List.of(visitResult.smtpVisit()));
         }
     }
 
     private VisitResult collectData(VisitRequest visitRequest) {
         DnsCrawlResult dnsCrawlResult = dnsCrawlService.retrieveDnsRecords(visitRequest);
+
+        if (dnsCrawlResult.getStatus() == CrawlStatus.NXDOMAIN) {
+            return new VisitResult(
+                    visitRequest,
+                    dnsCrawlResult,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+        }
+
+
         SiteVisit siteVisit = vatCrawlerService.findVatValues(visitRequest);
         VatCrawlResult vatCrawlResult = vatCrawlerService.convert(visitRequest, siteVisit);
         logger.info("siteVisit = {}", siteVisit);

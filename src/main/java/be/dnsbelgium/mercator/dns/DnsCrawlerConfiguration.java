@@ -1,5 +1,8 @@
 package be.dnsbelgium.mercator.dns;
 
+import be.dnsbelgium.mercator.dns.domain.geoip.DisabledGeoIpEnricher;
+import be.dnsbelgium.mercator.dns.domain.geoip.EnabledGeoIpEnricher;
+import be.dnsbelgium.mercator.dns.domain.geoip.GeoIpEnricher;
 import be.dnsbelgium.mercator.geoip.DisabledGeoIPService;
 import be.dnsbelgium.mercator.geoip.GeoIPService;
 import be.dnsbelgium.mercator.geoip.GeoIPServiceImpl;
@@ -16,7 +19,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 @EnableConfigurationProperties({MaxMindConfig.class})
 public class DnsCrawlerConfiguration  {
 
-    @Value("${crawler.dns.geoIP.enabled}")
+    @Value("${crawler.dns.geoIP.enabled:false}")
     boolean geoIpEnabled;
 
     private static final Logger logger = getLogger(DnsCrawlerConfiguration.class);
@@ -31,5 +34,13 @@ public class DnsCrawlerConfiguration  {
         }
     }
 
+    @Bean
+    public GeoIpEnricher geoIpEnricher(GeoIPService geoIPService) {
+        if (geoIpEnabled) {
+            return new EnabledGeoIpEnricher(geoIPService);
+        } else {
+            return new DisabledGeoIpEnricher();
+        }
+    }
 
 }

@@ -157,7 +157,7 @@ public class Scheduler {
             VisitRequest visitRequest = new VisitRequest(visit_id, domainName);
             workQueue.add(visitRequest);
         }
-        logger.info("queueWork done, with limit={}. We added {} items on the queue",
+        logger.debug("queueWork done, with limit={}. We added {} items on the queue",
                 limit, list.size());
 
     }

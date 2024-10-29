@@ -70,7 +70,12 @@ public class DnsCrawlService {
     Request initial = buildEntity(visitRequest, initialDnsRequest);
     requests.add(initial);
 
-    if (rcode == Lookup.UNRECOVERABLE || rcode == Lookup.TRY_AGAIN || rcode == Lookup.HOST_NOT_FOUND) {
+    if (rcode == Lookup.HOST_NOT_FOUND) {
+      logger.debug("Initial request had rcode = {} != 0 => skip other lookups for {}", rcode, domainName);
+      return DnsCrawlResult.nxdomain(requests);
+    }
+
+    if (rcode == Lookup.UNRECOVERABLE || rcode == Lookup.TRY_AGAIN) {
       // If initialDnsRequest is not ok then we save the failed request to the DB, so we know it has been requested.
       logger.debug("Initial request had rcode = {} != 0 => skip other lookups for {}", rcode, domainName);
     } else {

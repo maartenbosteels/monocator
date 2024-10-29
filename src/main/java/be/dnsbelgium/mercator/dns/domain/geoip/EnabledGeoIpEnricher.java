@@ -15,9 +15,6 @@ import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 
-@Primary
-@Component
-@ConditionalOnProperty("crawler.dns.geoIP.enabled")
 public class EnabledGeoIpEnricher implements GeoIpEnricher {
 
   private static final Logger log = LoggerFactory.getLogger(EnabledGeoIpEnricher.class);

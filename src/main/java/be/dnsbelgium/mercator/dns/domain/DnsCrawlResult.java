@@ -23,7 +23,12 @@ public class DnsCrawlResult {
         return new DnsCrawlResult(List.of(), CrawlStatus.INVALID_DOMAIN_NAME);
     }
 
+    public static DnsCrawlResult nxdomain(List<Request> requests) {
+        return new DnsCrawlResult(requests, CrawlStatus.NXDOMAIN);
+    }
+
     public static DnsCrawlResult of(List<Request> requests) {
         return new DnsCrawlResult(requests, CrawlStatus.OK);
     }
+
 }

@@ -84,7 +84,7 @@ public class SmtpCrawler implements CrawlerModule<SmtpVisit> {
       if (conversation.getId() == null) {
         logger.error("conversation with {} has no Id => will not save it in the cache", conversation.getIp());
       } else {
-        logger.info("Saving conversation with {} in the cache", conversation.getIp());
+        logger.info("Saving conversation with {} in the cache, id={}", conversation.getIp(), conversation.getId());
         cache.add(conversation.getIp(), conversation);
       }
     }
