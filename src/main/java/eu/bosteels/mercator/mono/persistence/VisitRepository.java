@@ -171,7 +171,7 @@ public class VisitRepository {
         smtpCrawler.saveItem(visitResult.smtpVisit());
       }
       var duration = Duration.between(start, Instant.now());
-      logger.debug("Done saving VisitResult for {}, took {}", visitResult.visitRequest(), duration);
+      logger.info("Done saving VisitResult for {}, took {}", visitResult.visitRequest(), duration);
 
     } catch (Exception e) {
       logger.info("save on {} started at {} failed", dbName, start);
@@ -421,7 +421,7 @@ public class VisitRepository {
   }
 
   public void save(@NotNull DnsCrawlResult crawlResult) {
-    logger.info("Saving crawlResult = {}", crawlResult.getStatus());
+    logger.info("Saving DnsCrawlResult with status {}", crawlResult.getStatus());
     for (var req : crawlResult.getRequests()) {
       String id = Ulid.fast().toString();
       req.setId(id);
@@ -791,7 +791,7 @@ public class VisitRepository {
   }
 
   private void savePageVisits(VisitRequest visitRequest, SiteVisit siteVisit) {
-    logger.warn("Persisting the {} page visits for {}", siteVisit.getNumberOfVisitedPages(), siteVisit.getBaseURL());
+    logger.info("Persisting the {} page visits for {}", siteVisit.getNumberOfVisitedPages(), siteVisit.getBaseURL());
 
     for (Map.Entry<Link, Page> linkPageEntry : siteVisit.getVisitedPages().entrySet()) {
       Page page = linkPageEntry.getValue();

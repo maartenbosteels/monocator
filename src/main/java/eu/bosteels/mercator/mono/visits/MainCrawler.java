@@ -28,6 +28,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static be.dnsbelgium.mercator.smtp.persistence.entities.CrawlStatus.SKIPPED;
+
 @SuppressWarnings("SqlDialectInspection")
 @Service
 public class MainCrawler {
@@ -123,8 +125,13 @@ public class MainCrawler {
             featuresList.add(features);
         }
         TlsCrawlResult tlsCrawlResult = tlsCrawler.visit(visitRequest);
-        // TODO
-        SmtpVisit smtpVisit = new SmtpVisit();
+        SmtpVisit smtpVisit = SmtpVisit
+                .builder()
+                .visitId(visitRequest.getVisitId())
+                .domainName(visitRequest.getDomainName())
+                .crawlStatus(SKIPPED)
+                .build();
+
         if (smtpEnabled) {
             logger.info("crawling SMTP for {}", visitRequest.getDomainName());
             var list = smtpCrawler.collectData(visitRequest);

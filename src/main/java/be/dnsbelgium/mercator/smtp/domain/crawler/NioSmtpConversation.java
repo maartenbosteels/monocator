@@ -76,7 +76,9 @@ public class NioSmtpConversation implements Conversation {
         } catch (ExecutionException | InterruptedException e) {
             meterRegistry.counter(MetricName.COUNTER_CONVERSATION_FAILED).increment();
             logger.error("crawl failed: message:{}", e.getMessage());
-            return new SmtpConversation();
+            smtpConversation.setErrorMessage(e.getMessage());
+            smtpConversation.setError(Error.OTHER);
+            return smtpConversation;
         }
     }
 
