@@ -30,8 +30,6 @@ public class SmtpVisit {
   @Builder.Default
   private List<SmtpHost> hosts = new ArrayList<>();
 
-  private static final Logger logger = getLogger(SmtpVisit.class);
-
   private CrawlStatus crawlStatus;
 
   public void add(SmtpHost host) {

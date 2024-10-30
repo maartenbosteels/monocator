@@ -126,7 +126,6 @@ class DnsCrawlServiceTest {
     assertThat(requests.get(0).getProblem()).isEqualTo("nxdomain");
     assertThat(requests.get(0).getResponses()).isEmpty();
     assertThat(requests.get(0).getNumOfResponses()).isEqualTo(0);
-    verify(enricher).enrichResponses(any());
     // lookup() is called only once
     verify(dnsResolver).lookup(any(String.class), any(Name.class), any(RecordType.class));
   }

@@ -16,8 +16,6 @@ public class SmtpHost {
 
   private int priority;
 
-  @Setter
-  @ToString.Exclude
   private SmtpConversation conversation;
 
 }

@@ -52,6 +52,19 @@ class SmtpRepositoryTest {
     assertThat(found.get()).isEqualTo(visit);
   }
 
+  @Test
+  public void equals() {
+    SmtpHost host1 = host("abcd", "convo-1");
+    SmtpHost host2 = host("abcd", "convo-1");
+
+    Instant now = Instant.now();
+    host1.getConversation().setTimestamp(now);
+    host2.getConversation().setTimestamp(now);
+
+    assertThat(host1.getConversation()).isEqualTo(host2.getConversation());
+    assertThat(host1).isEqualTo(host2);
+  }
+
 
   @Test
   public void saveHost() {

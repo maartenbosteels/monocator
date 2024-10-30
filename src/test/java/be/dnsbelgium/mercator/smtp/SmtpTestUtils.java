@@ -16,7 +16,6 @@ import org.xbill.DNS.TextParseException;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
@@ -58,8 +57,8 @@ public class SmtpTestUtils {
     }
 
     public static SmtpVisit visit() {
-        SmtpHost host1 = host(RandomStringUtils.randomAscii(8));
-        SmtpHost host2 = host(RandomStringUtils.randomAscii(8));
+        SmtpHost host1 = host(RandomStringUtils.randomAscii(8), null);
+        SmtpHost host2 = host(RandomStringUtils.randomAscii(8), null);
         SmtpVisit visit = SmtpVisit.builder()
           .visitId(VisitIdGenerator.generate())
           //.hosts(List.of(host1, host2))
@@ -73,11 +72,11 @@ public class SmtpTestUtils {
         return visit;
     }
 
-    public static SmtpHost host(String id) {
+    public static SmtpHost host(String id, String conversationId) {
         return SmtpHost.builder()
             .id(id)
             .hostName("smtp1.example.org")
-            .conversation(conversation(id))
+            .conversation(conversation(conversationId))
             .fromMx(true)
             .priority(10)
             .build();
@@ -109,7 +108,7 @@ public class SmtpTestUtils {
     public static SmtpVisit smtpVisitWithBinaryData() {
         var visitId = SmtpVisit.generateVisitId();
         var conversation = SmtpConversation.builder()
-            .id(RandomStringUtils.randomAlphanumeric(10))
+            .id(null)
             .ip("1.2.3.4")
             .connectReplyCode(220)
             .ipVersion(4)

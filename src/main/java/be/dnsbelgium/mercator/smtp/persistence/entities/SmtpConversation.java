@@ -66,7 +66,7 @@ public class SmtpConversation {
   // SMTP software version detected from banner (wild guess, easy to spoof)
   private String softwareVersion;
 
-  private final Instant timestamp;
+  private Instant timestamp;
 
   private final static String NULL_BYTE = "\u0000";
   private final static String EMPTY_STRING = "";
