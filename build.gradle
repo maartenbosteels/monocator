@@ -109,7 +109,6 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
 
-    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
@@ -137,7 +136,12 @@ dependencies {
     compileOnly group: 'org.immutables', name: 'value', version: '2.10.1'
 
     // https://mvnrepository.com/artifact/io.micrometer/micrometer-core
-    implementation group: 'io.micrometer', name: 'micrometer-core', version: '1.13.2'
+    implementation group: 'io.micrometer', name: 'micrometer-core', version: '1.13.6'
+
+    //   runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
+    // https://mvnrepository.com/artifact/io.micrometer/micrometer-registry-influx
+    runtimeOnly group: 'io.micrometer', name: 'micrometer-registry-influx', version: '1.13.6'
 
     // https://mvnrepository.com/artifact/commons-codec/commons-codec
     // For now we only use it for encoding byte arrays to Hexadecimal strings

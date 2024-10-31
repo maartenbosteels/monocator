@@ -106,7 +106,6 @@ public class MainCrawler {
             );
         }
 
-
         SiteVisit siteVisit = vatCrawlerService.findVatValues(visitRequest);
         VatCrawlResult vatCrawlResult = vatCrawlerService.convert(visitRequest, siteVisit);
         logger.info("siteVisit = {}", siteVisit);

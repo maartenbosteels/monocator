@@ -799,13 +799,24 @@ public class VisitRepository {
       boolean isLandingPage = page.getUrl().equals(siteVisit.getBaseURL());
       boolean saveLandingPage = (isLandingPage & persistFirstPageVisit);
 
-      if (persistPageVisits || page.isVatFound() || saveLandingPage) {
-        boolean includeBodyText = persistBodyText || page.isVatFound() || saveLandingPage;
-        PageVisit pageVisit = page.asPageVisit(visitRequest, includeBodyText);
-        pageVisit.setLinkText(linkPageEntry.getKey().getText());
-        save(pageVisit);
+      // body-text is already saved in html_features, no need to save it here as well
+      // TODO: remove column
+      boolean includeBodyText = false;
+      PageVisit pageVisit = page.asPageVisit(visitRequest, includeBodyText);
+      pageVisit.setLinkText(linkPageEntry.getKey().getText());
+      save(pageVisit);
 
-      }
+      // TODO: remove persistFirstPageVisit and persistBodyText flags
+
+//      if (persistPageVisits || page.isVatFound() || saveLandingPage) {
+//        // boolean includeBodyText = persistBodyText || page.isVatFound() || saveLandingPage;
+//        // body-text is already saved in html_features, no need to save it again
+//        boolean includeBodyText = false;
+//        PageVisit pageVisit = page.asPageVisit(visitRequest, includeBodyText);
+//        pageVisit.setLinkText(linkPageEntry.getKey().getText());
+//        save(pageVisit);
+//
+//      }
     }
   }
 

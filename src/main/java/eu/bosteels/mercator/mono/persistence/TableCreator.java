@@ -234,7 +234,7 @@ public class TableCreator {
                     issuer                   varchar(500),
                     subject                  varchar(500),
                     signature_hash_algorithm varchar(256),
-                    signed_by_sha256         varchar(256)  references tls_certificate,
+                    signed_by_sha256         varchar(256),  --logically references tls_certificate,
                     subject_alt_names        varchar[],
                     serial_number_hex        varchar(64),
                     insert_timestamp         timestamp default CURRENT_TIMESTAMP
@@ -285,7 +285,7 @@ public class TableCreator {
                     visit_id                       varchar(26)                     not null,
                     domain_name                    varchar(128)                    not null,
                     crawl_timestamp                timestamp                       not null,
-                    full_scan                      varchar                         not null  references tls_full_scan,
+                    full_scan                      varchar                         not null,  -- logically references tls_full_scan,
                     host_name_matches_certificate  boolean,
                     host_name                      varchar(128)                    not null,
                     leaf_certificate               varchar(256),
