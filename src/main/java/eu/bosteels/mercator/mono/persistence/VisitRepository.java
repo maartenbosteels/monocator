@@ -693,9 +693,12 @@ public class VisitRepository {
                 not_after,
                 insert_timestamp
             )
-            values (?,?,?,?,?,?,?,?,?,?,?,?, current_timestamp)
-            ON CONFLICT DO NOTHING
+            values (?,?,?,?,?,?,?,?,?,?,?,?, current_timestamp)            
             """;
+    // previously we had a primary key on sha256_fingerprint, and 'ON CONFLICT DO NOTHING' in the above statement,
+    // but we still got 'Failed to commit: PRIMARY KEY or UNIQUE constraint violated: duplicate key'
+    // Now trying without primary key
+
     //var signedBy = ( certificate.getSignedBy()== null) ? null : certificate.getSignedBy().getSha256Fingerprint();
     var signedBy = certificate.getSignedBySha256();
     jdbcTemplate.update(insert,
