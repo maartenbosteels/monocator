@@ -225,7 +225,7 @@ public class TableCreator {
         var ddl_certificate = """
                 create table if not exists tls_certificate
                 (
-                    sha256_fingerprint       varchar(256) primary key,
+                    sha256_fingerprint       varchar(256), -- logically a primary key,
                     version                  integer      not null,
                     public_key_schema        varchar(256),
                     public_key_length        integer,

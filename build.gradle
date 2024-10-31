@@ -41,6 +41,11 @@ configurations {
     }
 }
 
+tasks.named('test') {
+    useJUnitPlatform()
+    jvmArgs(['-XX:+EnableDynamicAgentLoading', '-Xshare:off'])
+}
+
 repositories {
     mavenCentral()
 //    maven { url 'https://repo.spring.io/milestone' }
