@@ -146,7 +146,7 @@ dependencies {
     //   runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 
     // https://mvnrepository.com/artifact/io.micrometer/micrometer-registry-influx
-    runtimeOnly group: 'io.micrometer', name: 'micrometer-registry-influx', version: '1.13.6'
+    // runtimeOnly group: 'io.micrometer', name: 'micrometer-registry-influx', version: '1.13.6'
 
     // https://mvnrepository.com/artifact/commons-codec/commons-codec
     // For now we only use it for encoding byte arrays to Hexadecimal strings
