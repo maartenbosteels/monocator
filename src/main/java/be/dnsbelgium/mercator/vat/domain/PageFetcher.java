@@ -14,12 +14,14 @@ import java.net.ConnectException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.function.ToDoubleFunction;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
 /*
   Uses OkHttp to fetch HTML pages
  */
+@SuppressWarnings("resource")
 @Service
 public class PageFetcher {
 
@@ -57,7 +59,68 @@ public class PageFetcher {
         .minWebSocketMessageToCompress(1024)
         .connectionSpecs(List.of(ConnectionSpec.COMPATIBLE_TLS, ConnectionSpec.CLEARTEXT))
         .build();
+    setupMetrics();
   }
+
+  private void setupMetrics() {
+    {
+      var cacheSize = new ToDoubleFunction<OkHttpClient>() {
+        @Override
+        public double applyAsDouble(OkHttpClient httpClient) {
+          var cache = httpClient.cache();
+          if (cache != null) {
+            try {
+              return cache.size();
+            } catch (IOException e) {
+              return 0;
+            }
+          }
+          return 0;
+        }
+      };
+      meterRegistry.gauge(MetricName.COUNTER_OKHTTP_CACHE_SIZE, client, cacheSize);
+    }
+    {
+      var hitCount = new ToDoubleFunction<OkHttpClient>() {
+        @Override
+        public double applyAsDouble(OkHttpClient httpClient) {
+          var cache = httpClient.cache();
+          if (cache != null) {
+            return cache.hitCount();
+          }
+          return 0;
+        }
+      };
+      meterRegistry.gauge(MetricName.COUNTER_OKHTTP_CACHE_HIT_COUNT, client, hitCount);
+    }
+    {
+      var networkCount = new ToDoubleFunction<OkHttpClient>() {
+        @Override
+        public double applyAsDouble(OkHttpClient httpClient) {
+          var cache = httpClient.cache();
+          if (cache != null) {
+            return cache.networkCount();
+          }
+          return 0;
+        }
+      };
+      meterRegistry.gauge(MetricName.COUNTER_OKHTTP_CACHE_NETWORK_COUNT, client, networkCount);
+    }
+    {
+      var hitRatio = new ToDoubleFunction<OkHttpClient>() {
+        @Override
+        public double applyAsDouble(OkHttpClient httpClient) {
+          var cache = httpClient.cache();
+          if (cache != null) {
+            return 1.0 * cache.hitCount() / cache.requestCount();
+          }
+          return 0;
+        }
+      };
+      meterRegistry.gauge(MetricName.COUNTER_OKHTTP_CACHE_HIT_RATIO, client, hitRatio);
+    }
+  }
+
 
   public void clearCache() {
     try {
@@ -125,14 +188,14 @@ public class PageFetcher {
         }
         MediaType contentType = responseBody.contentType();
         if (!isSupported(contentType)) {
-          logger.info("Skipping content since type = {}", contentType);
+          logger.debug("Skipping content since type = {}", contentType);
           meterRegistry.counter(MetricName.COUNTER_PAGES_CONTENT_TYPE_NOT_SUPPORTED,
               "content-type", contentType != null ? contentType.toString() : null).increment();
           return Page.CONTENT_TYPE_NOT_SUPPORTED;
         }
         long contentLength = responseBody.contentLength();
         if (contentLength > config.getMaxContentLength().toBytes()) {
-          logger.info("url={} => contentLength {} exceeds max content length of {}", url, responseBody.contentLength(), config.getMaxContentLength().toBytes());
+          logger.debug("url={} => contentLength {} exceeds max content length of {}", url, responseBody.contentLength(), config.getMaxContentLength().toBytes());
           meterRegistry.counter(MetricName.COUNTER_PAGES_TOO_BIG).increment();
           return Page.PAGE_TOO_BIG;
         }
@@ -144,9 +207,8 @@ public class PageFetcher {
           logger.debug("Requested {} but received response for {}", url, response.request().url());
         }
         logger.debug("Fetching {} => {} took {}", url, response.request().url(), fetchDuration);
-        updateMetrics();
         if (body.length() > config.getMaxContentLength().toBytes()) {
-          logger.info("url={} already fetched but skipped since length {} exceeds max content length of {}", url, body.length(), config.getMaxContentLength().toBytes());
+          logger.debug("url={} already fetched but skipped since length {} exceeds max content length of {}", url, body.length(), config.getMaxContentLength().toBytes());
           meterRegistry.counter(MetricName.COUNTER_PAGES_TOO_BIG).increment();
           return Page.PAGE_TOO_BIG;
         }
@@ -155,21 +217,10 @@ public class PageFetcher {
                 sentRequest, receivedResponse, response.code(), body, responseBody.contentLength(), contentType);
         }
     } catch (SSLHandshakeException | ConnectException e) {
-      logger.info("Failed to fetch {} because of {}", url, e.getMessage());
+      logger.debug("Failed to fetch {} because of {}", url, e.getMessage());
       meterRegistry.counter(MetricName.COUNTER_PAGES_FAILED).increment();
       return Page.failed(request.url(), started, Instant.now());
     }
-  }
-
-  private void updateMetrics() {
-      @SuppressWarnings("resource")
-      var client_cache = client.cache();
-      if (client_cache != null) {
-        meterRegistry.gauge(MetricName.COUNTER_OKHTTP_CACHE_HIT_COUNT, client_cache.hitCount());
-        meterRegistry.gauge(MetricName.COUNTER_OKHTTP_CACHE_NETWORK_COUNT, client_cache.networkCount());
-        double hitRatio = 1.0 * client_cache.hitCount() / client_cache.requestCount();
-        meterRegistry.gauge(MetricName.COUNTER_OKHTTP_CACHE_HIT_RATIO, hitRatio);
-      }
   }
 
   protected boolean isSupported(MediaType contentType) {

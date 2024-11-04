@@ -21,6 +21,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.time.Instant.now;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -42,6 +43,8 @@ public class NioSmtpConversation implements Conversation {
     private final SmtpSessionConfig sessionConfig;
     private final SmtpConfig config;
 
+    private final AtomicInteger crawlsOngoing = new AtomicInteger(0);
+
     // https://tools.ietf.org/html/rfc5321#section-4.5.3.1.5
     // The maximum total length of a reply line including the reply code and
     // the <CRLF> is 512 octets.  More information may be conveyed through
@@ -62,6 +65,7 @@ public class NioSmtpConversation implements Conversation {
         this.sessionConfig = sessionConfig;
         this.config = config;
         this.smtpConversation = new SmtpConversation(ipAddress);
+        meterRegistry.gauge("smtp.crawls.ongoing", crawlsOngoing);
     }
 
     // for testing
@@ -72,6 +76,8 @@ public class NioSmtpConversation implements Conversation {
     @Override
     public SmtpConversation talk() {
         try {
+            int ongoing = crawlsOngoing.incrementAndGet();
+            logger.info("crawls ongoing={}", ongoing);
             return start().get();
         } catch (ExecutionException | InterruptedException e) {
             meterRegistry.counter(MetricName.COUNTER_CONVERSATION_FAILED).increment();
@@ -79,7 +85,10 @@ public class NioSmtpConversation implements Conversation {
             smtpConversation.setErrorMessage(e.getMessage());
             smtpConversation.setError(Error.OTHER);
             return smtpConversation;
+        } finally {
+            crawlsOngoing.decrementAndGet();
         }
+
     }
 
     public CompletableFuture<SmtpConversation> start() {

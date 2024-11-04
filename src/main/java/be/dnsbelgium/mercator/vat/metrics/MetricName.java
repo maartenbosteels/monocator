@@ -3,6 +3,7 @@ package be.dnsbelgium.mercator.vat.metrics;
 public interface MetricName {
 
   String COUNTER_PAGES_FETCHED                    = "vat.crawler.pages.fetched";
+  String COUNTER_OKHTTP_CACHE_SIZE                = "vat.crawler.okhttp.cache.size.bytes";
   String COUNTER_OKHTTP_CACHE_HIT_COUNT           = "vat.crawler.okhttp.cache.hit.count";
   String COUNTER_OKHTTP_CACHE_HIT_RATIO           = "vat.crawler.okhttp.cache.hit.ratio";
   String COUNTER_OKHTTP_CACHE_NETWORK_COUNT       = "vat.crawler.okhttp.cache.network.count";

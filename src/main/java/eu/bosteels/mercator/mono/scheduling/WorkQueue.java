@@ -1,6 +1,7 @@
 package eu.bosteels.mercator.mono.scheduling;
 
 import be.dnsbelgium.mercator.common.VisitRequest;
+import io.micrometer.core.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jms.core.JmsTemplate;
@@ -35,6 +36,13 @@ public class WorkQueue {
         int inProgress = todoOrInProgress - inQueue;
         logger.debug("Visits inQueue: {}  visits-Todo-Or-In-Progress: {} In-Progress: {}",
                 inQueue, todoOrInProgress, inProgress);
+    }
+
+    @Timed("goofy")
+    public void doSomething(long millis) throws InterruptedException {
+        logger.warn("sleeping ...");
+        Thread.sleep(millis);
+        logger.warn("and awake now");
     }
 
     public void add(VisitRequest visitRequest) {

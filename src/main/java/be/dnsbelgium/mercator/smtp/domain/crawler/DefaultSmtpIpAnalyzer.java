@@ -4,6 +4,7 @@ import be.dnsbelgium.mercator.geoip.GeoIPService;
 import be.dnsbelgium.mercator.smtp.TxLogger;
 import be.dnsbelgium.mercator.smtp.metrics.MetricName;
 import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpConversation;
+import io.micrometer.core.annotation.Timed;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -36,6 +37,7 @@ public class DefaultSmtpIpAnalyzer implements SmtpIpAnalyzer {
   }
 
   @Override
+  @Timed("smtp.crawl.ip")
   public SmtpConversation crawl(InetAddress ip) {
     TxLogger.log(getClass(), "crawl");
     SmtpConversation smtpConversation = meterRegistry.timer(MetricName.TIMER_IP_CRAWL).record(() -> doCrawl(ip));

@@ -8,6 +8,7 @@ import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpVisit;
 import be.dnsbelgium.mercator.smtp.persistence.repositories.SmtpRepository;
 import eu.bosteels.mercator.mono.visits.CrawlerModule;
 import groovy.util.logging.Slf4j;
+import io.micrometer.core.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -40,6 +41,7 @@ public class SmtpCrawler implements CrawlerModule<SmtpVisit> {
   }
 
   @Override
+  @Timed("smtp.collectData")
   public List<SmtpVisit> collectData(VisitRequest visitRequest) {
     SmtpVisit smtpVisit = smtpAnalyzer.visit(visitRequest.getDomainName());
     smtpVisit.setVisitId(visitRequest.getVisitId());

@@ -1,6 +1,7 @@
 package eu.bosteels.mercator.mono.visits;
 
 import eu.bosteels.mercator.mono.persistence.VisitRepository;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
@@ -19,15 +20,17 @@ public class VisitService {
 
   private final ReadWriteLock readWriteLock;
   private final AtomicInteger transactionCount = new AtomicInteger(0);
+  private final AtomicInteger transactionsBusy = new AtomicInteger(0);
   private final VisitRepository visitRepository;
   private static final Logger logger = LoggerFactory.getLogger(VisitService.class);
 
-  @Value("${visits.max.transactions.per_db:10000}")
+  @Value("${visits.max.transactions.per_db:5000}")
   int maxTransactionsPerDatabase;
 
-  public VisitService(VisitRepository visitRepository) {
+  public VisitService(VisitRepository visitRepository, MeterRegistry meterRegistry) {
     this.visitRepository = visitRepository;
     this.readWriteLock = new ReentrantReadWriteLock();
+    meterRegistry.gauge("VisitService.transactionsBusy", transactionsBusy);
   }
 
   @PostConstruct
@@ -53,10 +56,12 @@ public class VisitService {
 
   private void doSave(VisitResult visitResult) {
     readWriteLock.readLock().lock();
+    transactionsBusy.incrementAndGet();
     try {
       visitRepository.save(visitResult);
     } finally {
       readWriteLock.readLock().unlock();
+      transactionsBusy.decrementAndGet();
     }
   }
 

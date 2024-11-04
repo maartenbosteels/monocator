@@ -20,6 +20,7 @@ import be.dnsbelgium.mercator.vat.domain.Page;
 import be.dnsbelgium.mercator.vat.domain.SiteVisit;
 import com.github.f4b6a3.ulid.Ulid;
 import eu.bosteels.mercator.mono.visits.VisitResult;
+import io.micrometer.core.annotation.Timed;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -133,6 +134,7 @@ public class VisitRepository {
   }
 
   @Transactional
+  @Timed("save.visitResult")
   public void save(VisitResult visitResult) {
     var start = Instant.now();
     var dbName = databaseName;

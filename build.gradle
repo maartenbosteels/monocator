@@ -143,7 +143,7 @@ dependencies {
     // https://mvnrepository.com/artifact/io.micrometer/micrometer-core
     implementation group: 'io.micrometer', name: 'micrometer-core', version: '1.13.6'
 
-    //   runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 
     // https://mvnrepository.com/artifact/io.micrometer/micrometer-registry-influx
     // runtimeOnly group: 'io.micrometer', name: 'micrometer-registry-influx', version: '1.13.6'

@@ -1,6 +1,6 @@
 apiVersion: 1
 providers:
-  - name: InfluxDB
+  - name: Mono
     folder: ''
     type: file
     disableDeletion: false
