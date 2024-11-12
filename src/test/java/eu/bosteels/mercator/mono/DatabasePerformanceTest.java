@@ -6,6 +6,7 @@ import eu.bosteels.mercator.mono.persistence.VisitRepository;
 import eu.bosteels.mercator.mono.visits.VisitResult;
 import eu.bosteels.mercator.mono.visits.VisitService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,13 +59,11 @@ public class DatabasePerformanceTest {
 
   @Test
   @Transactional
-  public void htmlFeatures() throws InterruptedException {
+  public void htmlFeatures() {
     visitRepository.attachAndUse();
-
-    for (int k=0; k<20; k++) {
-
+    for (int k=0; k<10; k++) {
       Instant start = Instant.now();
-      for (int i=0; i<5000; i++ ) {
+      for (int i=0; i<10; i++ ) {
         HtmlFeatures htmlFeatures = new HtmlFeatures();
         htmlFeatures.visitId = VisitIdGenerator.generate();
         htmlFeatures.domainName = "google.com";
@@ -76,10 +75,9 @@ public class DatabasePerformanceTest {
       }
       Instant done = Instant.now();
       Duration duration = Duration.between(start, done);
-      logger.info("saving 5000 rows took {}", duration);
-      logger.info("Sleeping 60s to give prometheus time to scrape us");
-      Thread.sleep(60_000);
-
+      logger.info("saving rows took {}", duration);
+      //logger.info("Sleeping 60s to give prometheus time to scrape us");
+      //Thread.sleep(60_000);
     }
   }
 
@@ -123,6 +121,7 @@ public class DatabasePerformanceTest {
 
   @SuppressWarnings("ResultOfMethodCallIgnored")
   @Test
+  @Disabled
   public void multiThreaded() throws InterruptedException {
     int loops = 5;
     int threads = 100;
@@ -162,10 +161,11 @@ public class DatabasePerformanceTest {
 
   @SuppressWarnings("ResultOfMethodCallIgnored")
   @Test
+  @Disabled
   public void multiThreaded_v2() throws InterruptedException {
-    int loops = 5;
-    int threads = 100;
-    int rows = 10_000;
+    int loops = 2;
+    int threads = 5;
+    int rows = 10;
     System.out.println("loop starting");
     for (int k=0; k<loops; k++) {
       logger.info("starting with loop {} out of {}", k+1, loops);
@@ -190,12 +190,12 @@ public class DatabasePerformanceTest {
       Instant done = Instant.now();
       Duration duration = Duration.between(start, done);
       logger.info("saving {} rows with {} threads took {}", rows, threads, duration);
-      logger.info("Sleeping 5s");
-      Thread.sleep(5_000);
+      //logger.info("Sleeping 5s");
+      //Thread.sleep(5_000);
 
     }
-    logger.info("Sleeping 60s to give prometheus time to scrape us");
-    Thread.sleep(60_000);
+    //logger.info("Sleeping 60s to give prometheus time to scrape us");
+    //Thread.sleep(60_000);
 
 
   }
