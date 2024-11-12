@@ -4,6 +4,7 @@ import be.dnsbelgium.mercator.common.VisitRequest;
 import be.dnsbelgium.mercator.vat.crawler.persistence.VatCrawlResult;
 import be.dnsbelgium.mercator.vat.domain.SiteVisit;
 import be.dnsbelgium.mercator.vat.domain.VatScraper;
+import eu.bosteels.mercator.mono.metrics.Threads;
 import jakarta.annotation.PostConstruct;
 import lombok.Setter;
 import okhttp3.HttpUrl;
@@ -50,7 +51,16 @@ public class VatCrawlerService {
     logger.info("maxVisitsPerDomain={}", maxVisitsPerDomain);
     logger.info("persistPageVisits={}", persistPageVisits);
     logger.info("persistBodyText={}", persistBodyText);
-    logger.info("persistFirstPageVisit={}", persistFirstPageVisit);
+      logger.info("persistFirstPageVisit={}", persistFirstPageVisit);
+  }
+
+  public SiteVisit visit(VisitRequest visitRequest) {
+    Threads.WEB.incrementAndGet();
+    try {
+      return findVatValues(visitRequest);
+    } finally {
+      Threads.WEB.decrementAndGet();
+    }
   }
 
   public SiteVisit findVatValues(VisitRequest visitRequest) {
@@ -78,7 +88,9 @@ public class VatCrawlerService {
   public VatCrawlResult convert(VisitRequest visitRequest, SiteVisit siteVisit) {
     String matchingUrl = (siteVisit.getMatchingURL() != null) ?  siteVisit.getMatchingURL().toString() : null;
     List<String> visited = siteVisit.getVisitedURLs()
-            .stream().map(HttpUrl::toString).collect(Collectors.toList());
+            .stream()
+            .map(HttpUrl::toString)
+            .collect(Collectors.toList());
     VatCrawlResult crawlResult = VatCrawlResult.builder()
             .visitId(visitRequest.getVisitId())
             .domainName(visitRequest.getDomainName())

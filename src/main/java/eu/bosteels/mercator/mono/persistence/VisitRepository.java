@@ -21,6 +21,8 @@ import be.dnsbelgium.mercator.vat.domain.SiteVisit;
 import com.github.f4b6a3.ulid.Ulid;
 import eu.bosteels.mercator.mono.visits.VisitResult;
 import io.micrometer.core.annotation.Timed;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -52,6 +54,9 @@ public class VisitRepository {
   private final JdbcTemplate jdbcTemplate;
   private final JdbcClient jdbcClient;
   private final TableCreator tableCreator;
+
+  private final MeterRegistry meterRegistry;
+
   private static final Logger logger = LoggerFactory.getLogger(VisitRepository.class);
 
   private final static Duration WARN_AFTER = Duration.ofSeconds(5);
@@ -65,14 +70,6 @@ public class VisitRepository {
   @Setter
   @Value("${vat.crawler.persist.page.visits:false}")
   private boolean persistPageVisits = false;
-
-  @Setter
-  @Value("${vat.crawler.persist.first.page.visit:false}")
-  private boolean persistFirstPageVisit = false;
-
-  @Setter
-  @Value("${vat.crawler.persist.body.text:false}")
-  private boolean persistBodyText = false;
 
   @Value("${visits.export.directory}")
   @Setter @Getter
@@ -89,10 +86,11 @@ public class VisitRepository {
   boolean ulidInDatabaseName;
 
   @Autowired
-  public VisitRepository(DuckDataSource dataSource, TableCreator tableCreator, SmtpCrawler smtpCrawler) {
+  public VisitRepository(DuckDataSource dataSource, TableCreator tableCreator, MeterRegistry meterRegistry, SmtpCrawler smtpCrawler) {
     this.jdbcTemplate = new JdbcTemplate(dataSource);
     this.jdbcClient = JdbcClient.create(dataSource);
     this.tableCreator = tableCreator;
+    this.meterRegistry = meterRegistry;
     this.smtpCrawler = smtpCrawler;
   }
 
@@ -111,6 +109,7 @@ public class VisitRepository {
       databaseDirectory = new File(System.getProperty("user.home"));
       logger.warn("databaseDirectory not set => using {}", databaseDirectory);
     }
+    logger.info("databaseDirectory: {}", databaseDirectory);
     FileUtils.forceMkdir(databaseDirectory);
   }
 
@@ -211,6 +210,11 @@ public class VisitRepository {
     this.databaseFile = new File(databaseDirectory, databaseName + ".db");
     attachAndUse();
     tableCreator.createVisitTables();
+    jdbcClient
+            .sql("create table if not exists latency" +
+                    "(timestamp timestamp, table_name varchar, id varchar, url varchar, ms int)")
+            .update();
+
     // log name of database in scheduler DB ?
     // logTables();
   }
@@ -293,7 +297,7 @@ public class VisitRepository {
 
   }
 
-  private void attachAndUse() {
+  public void attachAndUse() {
     var attach = String.format("ATTACH if not exists '%s' AS %s", databaseFile.getAbsolutePath(), databaseName);
     executeStatement(attach);
     executeStatement("use " + databaseName);
@@ -369,6 +373,7 @@ public class VisitRepository {
 
   public void save(@NotNull PageVisit pageVisit) {
     logger.debug("Saving PageVisit with url={}", pageVisit.getUrl());
+    var sample = Timer.start(meterRegistry);
     String insert = """
         insert into web_page_visit(
           visit_id,  domain_name,  crawl_started,  crawl_finished,  html,  body_text,  status_code,  url,  path,  vat_values,  link_text)
@@ -389,9 +394,11 @@ public class VisitRepository {
             .param("link_text", pageVisit.getLinkText())
             .param("vat_values", array(pageVisit.getVatValues()))
             .update();
+    sample.stop(meterRegistry.timer("repository.insert.web.page.visit"));
   }
 
   public void save(@NotNull VatCrawlResult crawlResult) {
+    var sample = Timer.start(meterRegistry);
     var insert = """
             insert into web_visit
             (
@@ -420,10 +427,12 @@ public class VisitRepository {
             visitedUrls
     );
     logger.debug("domain={} rowsInserted={}", crawlResult.getDomainName(), rowsInserted);
+    sample.stop(meterRegistry.timer("repository.insert.web.visit"));
   }
 
   public void save(@NotNull DnsCrawlResult crawlResult) {
     logger.info("Saving DnsCrawlResult with status {}", crawlResult.getStatus());
+    Timer.Sample sample = Timer.start(meterRegistry);
     for (var req : crawlResult.getRequests()) {
       String id = Ulid.fast().toString();
       req.setId(id);
@@ -438,9 +447,11 @@ public class VisitRepository {
         }
       }
     }
+    sample.stop(meterRegistry.timer("repository.save.dns.crawlresult"));
   }
 
   public void insertDnsRequest(@NotNull Request req) {
+    Timer.Sample sample = Timer.start(meterRegistry);
     var insert = """
             insert into dns_request(
                 id,
@@ -470,9 +481,11 @@ public class VisitRepository {
             req.getNumOfResponses(),
             timestamp(req.getCrawlTimestamp())
     );
+    sample.stop(meterRegistry.timer("repository.insert.dns.request"));
   }
 
   public void insertResponse(@NotNull Request request, @NotNull Response response) {
+    Timer.Sample sample = Timer.start(meterRegistry);
     String insert =
             """
                         insert into dns_response(id, dns_request, record_data, ttl)
@@ -487,9 +500,11 @@ public class VisitRepository {
             response.getRecordData(),
             response.getTtl()
     );
+    sample.stop(meterRegistry.timer("repository.insert.dns.response"));
   }
 
   public void insertGeoIp(@NotNull Response response, @NotNull ResponseGeoIp responseGeoIp) {
+    var sample = Timer.start(meterRegistry);
     String insert = """
             insert into response_geo_ips
             (dns_response, asn, country, ip, asn_organisation, ip_version)
@@ -504,9 +519,13 @@ public class VisitRepository {
             responseGeoIp.getAsnOrganisation(),
             responseGeoIp.getIpVersion()
     );
+    sample.stop(meterRegistry.timer("repository.insert.dns.response.geo.ip"));
   }
 
   public void save(@NotNull HtmlFeatures h) {
+    // we avoid the @Timed aspect since it generates ugly stacktraces ...
+    var sample = Timer.start(meterRegistry);
+    long start = System.currentTimeMillis();
     var insert = """
             insert into html_features(
                 visit_id,
@@ -619,6 +638,15 @@ public class VisitRepository {
             h.distance_title_initial_dn,
             h.longest_subsequence_title_initial_dn
     );
+    sample.stop(meterRegistry.timer("repository.save.html.features"));
+    long millis = System.currentTimeMillis() - start;
+    jdbcClient.sql(
+            "insert into latency(timestamp, table_name, id, url, ms) " +
+                    "values (current_timestamp, 'html_features', :id, :url, :ms)")
+            .param("id", h.visitId)
+            .param("ms", millis)
+            .param("url", h.url)
+            .update();
   }
 
   public void persist(CrawlResult crawlResult) {
@@ -646,8 +674,8 @@ public class VisitRepository {
     }
   }
 
-
   public void save(CrawlResultEntity crawlResult) {
+    var sample = Timer.start(meterRegistry);
     String insert = """
                 insert into tls_crawl_result(
                 visit_id,
@@ -676,9 +704,11 @@ public class VisitRepository {
             crawlResult.isCertificateTooSoon(),
             crawlResult.isChainTrustedByJavaPlatform()
     );
+    sample.stop(meterRegistry.timer("repository.insert.tls.crawl.result"));
   }
 
   public void save(CertificateEntity certificate) {
+    var sample = Timer.start(meterRegistry);
     var insert = """
             insert into tls_certificate (
                 sha256_fingerprint,
@@ -695,7 +725,7 @@ public class VisitRepository {
                 not_after,
                 insert_timestamp
             )
-            values (?,?,?,?,?,?,?,?,?,?,?,?, current_timestamp)            
+            values (?,?,?,?,?,?,?,?,?,?,?,?, current_timestamp)
             """;
     // previously we had a primary key on sha256_fingerprint, and 'ON CONFLICT DO NOTHING' in the above statement,
     // but we still got 'Failed to commit: PRIMARY KEY or UNIQUE constraint violated: duplicate key'
@@ -717,9 +747,11 @@ public class VisitRepository {
             timestamp(certificate.getNotBefore()),
             timestamp(certificate.getNotAfter())
     );
+    sample.stop(meterRegistry.timer("repository.insert.tls.certificate"));
   }
 
   public void save(FullScanEntity fullScan) {
+    var sample = Timer.start(meterRegistry);
     var insert = """
             insert into tls_full_scan(
                     id,
@@ -793,6 +825,7 @@ public class VisitRepository {
             fullScan.getMillis_ssl_2_0(),
             fullScan.getTotalDurationInMs()
     );
+    sample.stop(meterRegistry.timer("repository.insert.tls.full.scan"));
   }
 
   private void savePageVisits(VisitRequest visitRequest, SiteVisit siteVisit) {
@@ -802,26 +835,12 @@ public class VisitRepository {
       Page page = linkPageEntry.getValue();
 
       boolean isLandingPage = page.getUrl().equals(siteVisit.getBaseURL());
-      boolean saveLandingPage = (isLandingPage & persistFirstPageVisit);
-
       // body-text is already saved in html_features, no need to save it here as well
       // TODO: remove column
       boolean includeBodyText = false;
       PageVisit pageVisit = page.asPageVisit(visitRequest, includeBodyText);
       pageVisit.setLinkText(linkPageEntry.getKey().getText());
       save(pageVisit);
-
-      // TODO: remove persistFirstPageVisit and persistBodyText flags
-
-//      if (persistPageVisits || page.isVatFound() || saveLandingPage) {
-//        // boolean includeBodyText = persistBodyText || page.isVatFound() || saveLandingPage;
-//        // body-text is already saved in html_features, no need to save it again
-//        boolean includeBodyText = false;
-//        PageVisit pageVisit = page.asPageVisit(visitRequest, includeBodyText);
-//        pageVisit.setLinkText(linkPageEntry.getKey().getText());
-//        save(pageVisit);
-//
-//      }
     }
   }
 

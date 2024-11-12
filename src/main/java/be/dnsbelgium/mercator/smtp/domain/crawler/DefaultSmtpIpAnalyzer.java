@@ -4,6 +4,7 @@ import be.dnsbelgium.mercator.geoip.GeoIPService;
 import be.dnsbelgium.mercator.smtp.TxLogger;
 import be.dnsbelgium.mercator.smtp.metrics.MetricName;
 import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpConversation;
+import eu.bosteels.mercator.mono.metrics.Threads;
 import io.micrometer.core.annotation.Timed;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.commons.lang3.tuple.Pair;
@@ -51,7 +52,12 @@ public class DefaultSmtpIpAnalyzer implements SmtpIpAnalyzer {
     TxLogger.log(getClass(), "doCrawl");
     logger.debug("About to talk SMTP with {}", ip);
     Conversation conversation = conversationFactory.create(ip);
-    return conversation.talk();
+    Threads.SMTP.incrementAndGet();
+    try {
+      return conversation.talk();
+    } finally {
+      Threads.SMTP.decrementAndGet();
+    }
   }
 
   private void geoIP(SmtpConversation smtpConversation) {

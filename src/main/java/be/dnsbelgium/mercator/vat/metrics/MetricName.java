@@ -17,4 +17,5 @@ public interface MetricName {
   String TIMER_PAGE_RESPONSE_RECEIVED = "vat.crawler.page.response.received";
   String TIMER_PAGE_BODY_FETCHED      = "vat.crawler.page.body.fetched";
 
+  String COUNTER_WEB_CRAWLS_DONE = "web.crawls.done";
 }

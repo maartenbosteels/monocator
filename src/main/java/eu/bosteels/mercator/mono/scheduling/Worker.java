@@ -1,6 +1,7 @@
 package eu.bosteels.mercator.mono.scheduling;
 
 import be.dnsbelgium.mercator.common.VisitRequest;
+import eu.bosteels.mercator.mono.metrics.Threads;
 import eu.bosteels.mercator.mono.visits.MainCrawler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +42,7 @@ public class Worker {
 
   @JmsListener(destination = "visit_requests", containerFactory = "myFactory", concurrency = "${worker.concurrency:10-30}")
   public void receiveMessage(VisitRequest visitRequest) {
+    Threads.PROCESS_MESSAGE.incrementAndGet();
     messagesReceived.incrementAndGet();
     workQueue.messagePopped();
     logger.debug("messagesReceived: {}", messagesReceived);
@@ -63,6 +65,8 @@ public class Worker {
         );
         jmsListenerEndpointRegistry.stop();
       }
+    } finally {
+      Threads.PROCESS_MESSAGE.decrementAndGet();
     }
   }
 

@@ -9,6 +9,7 @@ import be.dnsbelgium.mercator.dns.dto.RRecord;
 import be.dnsbelgium.mercator.dns.dto.RecordType;
 import be.dnsbelgium.mercator.dns.persistence.Request;
 import be.dnsbelgium.mercator.dns.persistence.Response;
+import eu.bosteels.mercator.mono.metrics.Threads;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -34,6 +35,15 @@ public class DnsCrawlService {
     this.resolver = resolver;
     this.enricher = enricher;
     this.dnsCrawlerConfig = dnsCrawlerConfig;
+  }
+
+  public DnsCrawlResult visit(VisitRequest visitRequest) {
+    Threads.DNS.incrementAndGet();
+    try {
+      return retrieveDnsRecords(visitRequest);
+    } finally {
+      Threads.DNS.decrementAndGet();
+    }
   }
 
   public DnsCrawlResult retrieveDnsRecords(VisitRequest visitRequest) {

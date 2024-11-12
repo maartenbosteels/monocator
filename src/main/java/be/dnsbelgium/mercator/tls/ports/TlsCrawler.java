@@ -3,6 +3,8 @@ package be.dnsbelgium.mercator.tls.ports;
 import be.dnsbelgium.mercator.common.VisitRequest;
 import be.dnsbelgium.mercator.tls.crawler.persistence.entities.FullScanEntity;
 import be.dnsbelgium.mercator.tls.domain.*;
+import eu.bosteels.mercator.mono.metrics.Threads;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import static be.dnsbelgium.mercator.tls.metrics.MetricName.COUNTER_VISITS_COMPLETED;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
@@ -27,6 +30,7 @@ public class TlsCrawler {
   private final FullScanCache fullScanCache;
   private final TlsScanner tlsScanner;
   private final BlackList blackList;
+  private final MeterRegistry meterRegistry;
 
   private static final Logger logger = getLogger(TlsCrawler.class);
 
@@ -37,12 +41,13 @@ public class TlsCrawler {
 
   @Autowired
   public TlsCrawler(
-            TlsScanner tlsScanner,
-            FullScanCache fullScanCache,
-            BlackList blackList) {
+          TlsScanner tlsScanner,
+          FullScanCache fullScanCache,
+          BlackList blackList, MeterRegistry meterRegistry) {
       this.fullScanCache = fullScanCache;
       this.tlsScanner = tlsScanner;
       this.blackList = blackList;
+      this.meterRegistry = meterRegistry;
   }
 
   @PostConstruct
@@ -61,18 +66,24 @@ public class TlsCrawler {
   }
 
   public TlsCrawlResult visit(VisitRequest visitRequest) {
-    List<CrawlResult> results = new ArrayList<>();
-    if (visitApex) {
-      String hostName = visitRequest.getDomainName();
-      CrawlResult crawlResult = visit(hostName, visitRequest);
-      results.add(crawlResult);
+    try {
+      Threads.TLS.incrementAndGet();
+      List<CrawlResult> results = new ArrayList<>();
+      if (visitApex) {
+        String hostName = visitRequest.getDomainName();
+        CrawlResult crawlResult = visit(hostName, visitRequest);
+        results.add(crawlResult);
+      }
+      if (visitWww) {
+        String hostName = "www." + visitRequest.getDomainName();
+        CrawlResult crawlResult = visit(hostName, visitRequest);
+        results.add(crawlResult);
+      }
+      meterRegistry.counter(COUNTER_VISITS_COMPLETED).increment();
+      return new TlsCrawlResult(results);
+    } finally {
+      Threads.TLS.decrementAndGet();
     }
-    if (visitWww) {
-      String hostName = "www." + visitRequest.getDomainName();
-      CrawlResult crawlResult = visit(hostName, visitRequest);
-      results.add(crawlResult);
-    }
-    return new TlsCrawlResult(results);
   }
 
   public void addToCache(CrawlResult crawlResult) {

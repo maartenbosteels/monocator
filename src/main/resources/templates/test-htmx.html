@@ -35,13 +35,17 @@
             </div>
         </article>
 
+        <h1>Submit some crawls</h1>
 
         <div>
-            <p>
-                Submit crawls
-            </p>
-            <p>
-                <button th:hx-get="@{/hello_htmx}" hx-target="#message">Click me</button>
+            <form th:hx-get="@{/submit_crawls}" hx-target="#submit-crawl-response">
+                <input name="numberOfCrawls" value="100" type="number">
+                <button>Submit</button>
+            </form>
+            <div id="submit-crawl-response">
+                <p>...</p>
+            </div>
+
             </p>
         </div>
 

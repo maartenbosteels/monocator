@@ -1,7 +1,9 @@
 package eu.bosteels.mercator.mono.visits;
 
+import eu.bosteels.mercator.mono.metrics.Threads;
 import eu.bosteels.mercator.mono.persistence.VisitRepository;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
@@ -22,6 +24,7 @@ public class VisitService {
   private final AtomicInteger transactionCount = new AtomicInteger(0);
   private final AtomicInteger transactionsBusy = new AtomicInteger(0);
   private final VisitRepository visitRepository;
+  private final MeterRegistry meterRegistry;
   private static final Logger logger = LoggerFactory.getLogger(VisitService.class);
 
   @Value("${visits.max.transactions.per_db:5000}")
@@ -29,6 +32,7 @@ public class VisitService {
 
   public VisitService(VisitRepository visitRepository, MeterRegistry meterRegistry) {
     this.visitRepository = visitRepository;
+    this.meterRegistry = meterRegistry;
     this.readWriteLock = new ReentrantReadWriteLock();
     meterRegistry.gauge("VisitService.transactionsBusy", transactionsBusy);
   }
@@ -45,13 +49,20 @@ public class VisitService {
   }
 
   public void save(VisitResult visitResult) {
-    int count = transactionCount.getAndIncrement();
-    logger.debug("transactionCount: {}", count);
-    if (count == maxTransactionsPerDatabase) {
-      logger.info("current database had {} transactions => exporting and then starting new db", count);
-      exportDatabase(true);
+    Threads.SAVE.incrementAndGet();
+    Timer.Sample sample = Timer.start(meterRegistry);
+    try {
+      int count = transactionCount.getAndIncrement();
+      logger.debug("transactionCount: {}", count);
+      if (count == maxTransactionsPerDatabase) {
+        logger.info("current database had {} transactions => exporting and then starting new db", count);
+        exportDatabase(true);
+      }
+      doSave(visitResult);
+    } finally {
+      Threads.SAVE.decrementAndGet();
+      sample.stop(meterRegistry.timer("visit.service.save"));
     }
-    doSave(visitResult);
   }
 
   private void doSave(VisitResult visitResult) {

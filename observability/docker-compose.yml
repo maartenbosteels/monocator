@@ -18,8 +18,6 @@ services:
     volumes:
       - ./prometheus:/etc/prometheus
       - prom_data:/prometheus
-#    volumes:
-#      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
 
   grafana:
     image: grafana/grafana:latest
@@ -31,10 +29,8 @@ services:
     depends_on:
       - prometheus
     environment:
-      - GF_SECURITY_ADMIN_USER=grafana
-      - GF_SECURITY_ADMIN_PASSWORD=grafana-admin
-#      - GF_SECURITY_ADMIN_USER__FILE=/run/secrets/grafana-admin-username
-#      - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana-admin-password
+      - GF_SECURITY_ADMIN_USER__FILE=/run/secrets/grafana-admin-username
+      - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana-admin-password
     secrets:
       - grafana-admin-username
       - grafana-admin-password

@@ -18,6 +18,8 @@ import be.dnsbelgium.mercator.vat.crawler.persistence.VatCrawlResult;
 import com.github.f4b6a3.ulid.Ulid;
 import eu.bosteels.mercator.mono.persistence.TableCreator;
 import eu.bosteels.mercator.mono.persistence.VisitRepository;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -47,6 +49,7 @@ class VisitRepositoryTest {
   static VisitRepository visitRepository;
   static SmtpCrawler smtpCrawler;
   static JdbcClient jdbcClient;
+  static MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
   @TempDir
   static File tempDir;
@@ -61,7 +64,7 @@ class VisitRepositoryTest {
     TableCreator tableCreator = new TableCreator(dataSource, smtpCrawler);
     tableCreator.init();
     tableCreator.createVisitTables();
-    visitRepository = new VisitRepository(dataSource, tableCreator, smtpCrawler);
+    visitRepository = new VisitRepository(dataSource, tableCreator, meterRegistry, smtpCrawler);
     visitRepository.setDatabaseDirectory(tempDir);
     visitRepository.setExportDirectory(tempDir);
     visitRepository.init();
