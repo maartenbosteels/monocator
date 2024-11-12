@@ -2,21 +2,25 @@ package eu.bosteels.mercator.mono.mvc;
 
 import be.dnsbelgium.mercator.DuckDataSource;
 import be.dnsbelgium.mercator.common.VisitRequest;
+import eu.bosteels.mercator.mono.metrics.Threads;
+import eu.bosteels.mercator.mono.scheduling.Scheduler;
 import eu.bosteels.mercator.mono.scheduling.WorkQueue;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Controller
 @RequestMapping("/")
@@ -26,15 +30,23 @@ public class HomeController {
     private final MeterRegistry meterRegistry;
 
     private final WorkQueue workQueue;
+    private final DuckDataSource dataSource;
+    private final Scheduler scheduler;
 
-    public HomeController(MeterRegistry meterRegistry, WorkQueue workQueue) {
+    @Value("${tranco.location}")
+    @Setter
+    @Getter
+    private File trancoLocation;
+
+    public HomeController(MeterRegistry meterRegistry, WorkQueue workQueue, DuckDataSource dataSource, Scheduler scheduler) {
       this.meterRegistry = meterRegistry;
       this.workQueue = workQueue;
+      this.dataSource = dataSource;
+      this.scheduler = scheduler;
     }
 
     @GetMapping
     public String index() {
-        logger.info("index called");
         return "index";
     }
 
@@ -51,43 +63,37 @@ public class HomeController {
 
     @GetMapping("/hello_htmx")
     @ResponseBody
-    public String hello_htmx(
-        @RequestParam(name = "search", defaultValue = "") String search,
-        @RequestParam(name = "millis", defaultValue = "100") int millis
-    ) throws InterruptedException {
-        System.out.println("hello_htmx called: search=[" + search + "] millis=[" + millis + "]");
-        String now = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);
-
-        Timer timer = meterRegistry.timer("mono.home", "search", search);
-        timer.record(millis, TimeUnit.MILLISECONDS);
-        logger.warn("timer = {}", timer);
-        logger.warn("timer.totalTime = {} ms", timer.totalTime(TimeUnit.MILLISECONDS));
-        logger.warn("timer.count     = {} ms", timer.count());
-
-        workQueue.doSomething(millis);
-
-      return (
-          "<p>timer.totalTime = %s ms </p>").formatted(timer.totalTime(TimeUnit.MILLISECONDS)) +
-          "<p> timer.count     = %d ms </p>".formatted(timer.count()) +
-          "<p>hello, it is now" + now + " </p>";
+    public String hello_htmx() {
+      return Threads.logInfo();
     }
+
+
     @GetMapping("/submit_crawls")
     @ResponseBody
     public String submitCrawls(@RequestParam(name = "numberOfCrawls", defaultValue = "100") int numberOfCrawls) {
         logger.info("submitCrawls called: numberOfCrawls = {}", numberOfCrawls);
-        var ds = DuckDataSource.memory();
-        JdbcClient jdbcClient = JdbcClient.create(ds);
+        String query = "select domain_name from '%s' limit ?".formatted(trancoLocation.getAbsolutePath());
+        logger.info("query = {}", query);
+        JdbcClient jdbcClient = JdbcClient.create(dataSource);
         List<String> names = jdbcClient
-            .sql("select domain_name from 'tranco_be.parquet' limit ?")
+            .sql(query)
             .param(numberOfCrawls)
             .query(String.class)
             .list();
         logger.info("names.size = {}", names.size());
         for (String domainName : names) {
             VisitRequest visitRequest = new VisitRequest(domainName);
-            workQueue.add(visitRequest);
+            // workQueue.add(visitRequest);
+            // todo: move code to service (if we want to keep it)
+            // We could also do it in one statement without the loop
+            jdbcClient
+                    .sql("insert into work (visit_id, domain_name) values (?,?)")
+                    .param(visitRequest.getVisitId())
+                    .param(visitRequest.getDomainName())
+                    .update();
         }
-        return "We added " + numberOfCrawls + " visit requests to the queue";
+        scheduler.queueWork();
+        return "We added " + names.size() + " visit requests to the queue";
     }
 
 
