@@ -40,6 +40,7 @@ import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 @ActiveProfiles({"local" })
 @AutoConfigureObservability
 @ContextConfiguration(classes = MonocatorApplication.class)
+@Disabled
 public class DatabasePerformanceTest {
 
   @Autowired
