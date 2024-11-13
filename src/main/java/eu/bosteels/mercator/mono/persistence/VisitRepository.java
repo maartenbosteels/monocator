@@ -160,10 +160,6 @@ public class VisitRepository {
         List<?> data = visitResult.getCollectedData().get(crawlerModule);
         crawlerModule.save(data);
       }
-
-      if (visitResult.getSmtpVisit() != null) {
-        smtpCrawler.saveItem(visitResult.getSmtpVisit());
-      }
       var duration = Duration.between(start, Instant.now());
       logger.info("Done saving VisitResult for {}, took {}", visitResult.getVisitRequest(), duration);
 

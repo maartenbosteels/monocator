@@ -4,7 +4,6 @@ import be.dnsbelgium.mercator.common.VisitRequest;
 import be.dnsbelgium.mercator.dns.domain.DnsCrawlResult;
 import be.dnsbelgium.mercator.feature.extraction.persistence.HtmlFeatures;
 import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpVisit;
-import be.dnsbelgium.mercator.tls.domain.CrawlResult;
 import be.dnsbelgium.mercator.tls.domain.TlsCrawlResult;
 import be.dnsbelgium.mercator.vat.crawler.persistence.VatCrawlResult;
 import be.dnsbelgium.mercator.vat.domain.SiteVisit;
@@ -26,12 +25,7 @@ public class VisitResult {
     List<HtmlFeatures> featuresList;
     VatCrawlResult vatCrawlResult;
     SiteVisit siteVisit;
-    TlsCrawlResult tlsCrawlResult;
-    SmtpVisit smtpVisit;
-
-    List<CrawlResult> tlsCrawlResults;
 
     Map<CrawlerModule<?>, List<?>> collectedData;
-
 
 }

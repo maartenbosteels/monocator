@@ -28,7 +28,7 @@ import static be.dnsbelgium.mercator.tls.metrics.MetricName.COUNTER_VISITS_COMPL
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
-public class TlsCrawler implements CrawlerModule<CrawlResult> {
+public class TlsCrawler implements CrawlerModule<TlsCrawlResult> {
 
   private final FullScanCache fullScanCache;
   private final TlsScanner tlsScanner;
@@ -71,8 +71,8 @@ public class TlsCrawler implements CrawlerModule<CrawlResult> {
     }
   }
 
-  public void addToCache(CrawlResult crawlResult) {
-    fullScanCache.add(Instant.now(), crawlResult.getFullScanEntity());
+  public void addToCache(TlsCrawlResult tlsCrawlResult) {
+    fullScanCache.add(Instant.now(), tlsCrawlResult.getFullScanEntity());
   }
 
   @Scheduled(fixedRate = 15, initialDelay = 15, timeUnit = TimeUnit.MINUTES)
@@ -88,7 +88,7 @@ public class TlsCrawler implements CrawlerModule<CrawlResult> {
    * @param visitRequest the domain name to visit
    * @return the results of scanning the domain name
    */
-  public CrawlResult visit(String hostName, VisitRequest visitRequest) {
+  public TlsCrawlResult visit(String hostName, VisitRequest visitRequest) {
     logger.info("Crawling {}", visitRequest);
     InetSocketAddress address = new InetSocketAddress(hostName, destinationPort);
 
@@ -99,11 +99,11 @@ public class TlsCrawler implements CrawlerModule<CrawlResult> {
         logger.debug("Found matching result in the cache. Now get certificates for {}", hostName);
         TlsProtocolVersion version = TlsProtocolVersion.of(resultFromCache.get().getHighestVersionSupported());
         SingleVersionScan singleVersionScan = (version != null) ? tlsScanner.scan(version, hostName) : null;
-        return CrawlResult.fromCache(hostName, visitRequest, resultFromCache.get(), singleVersionScan);
+        return TlsCrawlResult.fromCache(hostName, visitRequest, resultFromCache.get(), singleVersionScan);
       }
     }
     FullScan fullScan = scanIfNotBlacklisted(address);
-    return CrawlResult.fromScan(hostName, visitRequest, fullScan);
+    return TlsCrawlResult.fromScan(hostName, visitRequest, fullScan);
   }
 
   private FullScan scanIfNotBlacklisted(InetSocketAddress address) {
@@ -115,19 +115,19 @@ public class TlsCrawler implements CrawlerModule<CrawlResult> {
 
 
   @Override
-  public List<CrawlResult> collectData(VisitRequest visitRequest) {
-    List<CrawlResult> results = new ArrayList<>();
+  public List<TlsCrawlResult> collectData(VisitRequest visitRequest) {
+    List<TlsCrawlResult> results = new ArrayList<>();
     try {
       Threads.TLS.incrementAndGet();
       if (visitApex) {
         String hostName = visitRequest.getDomainName();
-        CrawlResult crawlResult = visit(hostName, visitRequest);
-        results.add(crawlResult);
+        TlsCrawlResult tlsCrawlResult = visit(hostName, visitRequest);
+        results.add(tlsCrawlResult);
       }
       if (visitWww) {
         String hostName = "www." + visitRequest.getDomainName();
-        CrawlResult crawlResult = visit(hostName, visitRequest);
-        results.add(crawlResult);
+        TlsCrawlResult tlsCrawlResult = visit(hostName, visitRequest);
+        results.add(tlsCrawlResult);
       }
       meterRegistry.counter(COUNTER_VISITS_COMPLETED).increment();
     } finally {
@@ -138,29 +138,34 @@ public class TlsCrawler implements CrawlerModule<CrawlResult> {
 
   @Override
   public void save(List<?> collectedData) {
-    for (Object object : collectedData) {
-      if (object instanceof CrawlResult crawlResult) {
-        saveItem(crawlResult);
-      }
+    collectedData.forEach(this::save);
+  }
+
+  public void save(Object item) {
+    if (item instanceof TlsCrawlResult visit) {
+      saveItem(visit);
+    } else {
+      logger.error("Cannot save item of type: {}", item.getClass().getName());
     }
   }
 
+
   @Override
-  public void saveItem(CrawlResult crawlResult) {
-    tlsRepository.persist(crawlResult);
+  public void saveItem(TlsCrawlResult tlsCrawlResult) {
+    tlsRepository.persist(tlsCrawlResult);
   }
 
   @Override
   public void afterSave(List<?> collectedData) {
     for (Object object : collectedData) {
-      if (object instanceof CrawlResult crawlResult) {
-        addToCache(crawlResult);
+      if (object instanceof TlsCrawlResult tlsCrawlResult) {
+        addToCache(tlsCrawlResult);
       }
     }
   }
 
   @Override
-  public List<CrawlResult> find(String visitId) {
+  public List<TlsCrawlResult> find(String visitId) {
     // TODO
     throw new NotImplementedException("TODO");
   }

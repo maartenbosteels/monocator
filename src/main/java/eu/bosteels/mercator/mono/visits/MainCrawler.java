@@ -8,7 +8,6 @@ import be.dnsbelgium.mercator.feature.extraction.HtmlFeatureExtractor;
 import be.dnsbelgium.mercator.feature.extraction.persistence.HtmlFeatures;
 import be.dnsbelgium.mercator.smtp.SmtpCrawler;
 import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpVisit;
-import be.dnsbelgium.mercator.tls.domain.CrawlResult;
 import be.dnsbelgium.mercator.tls.domain.TlsCrawlResult;
 import be.dnsbelgium.mercator.tls.ports.TlsCrawler;
 import be.dnsbelgium.mercator.vat.VatCrawlerService;
@@ -31,7 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static be.dnsbelgium.mercator.smtp.persistence.entities.CrawlStatus.SKIPPED;
 import static be.dnsbelgium.mercator.vat.metrics.MetricName.COUNTER_WEB_CRAWLS_DONE;
 
 @SuppressWarnings("SqlDialectInspection")
@@ -136,30 +134,23 @@ public class MainCrawler {
                 .dnsCrawlResult(dnsCrawlResult)
                 .build();
       }
+      Map<CrawlerModule<?>, List<?>> collectedData = new HashMap<>();
 
       SiteVisit siteVisit = vatCrawlerService.visit(visitRequest);
       VatCrawlResult vatCrawlResult = vatCrawlerService.convert(visitRequest, siteVisit);
       meterRegistry.counter(COUNTER_WEB_CRAWLS_DONE).increment();
       List<HtmlFeatures> featuresList = findFeatures(visitRequest, siteVisit);
 
-      List<CrawlResult> tlsCrawlResults = tlsCrawler.collectData(visitRequest);
-
-      SmtpVisit smtpVisit = SmtpVisit
-              .builder()
-              .visitId(visitRequest.getVisitId())
-              .domainName(visitRequest.getDomainName())
-              .crawlStatus(SKIPPED)
-              .build();
+      List<TlsCrawlResult> tlsCrawlResults = tlsCrawler.collectData(visitRequest);
+      collectedData.put(tlsCrawler, tlsCrawlResults);
 
       if (smtpEnabled) {
         logger.info("crawling SMTP for {}", visitRequest.getDomainName());
-        var list = smtpCrawler.collectData(visitRequest);
-        logger.info("DONE crawling SMTP for {} => {}", visitRequest.getDomainName(), list);
-        smtpVisit = list.getFirst();
+        List<SmtpVisit> smtpVisits = smtpCrawler.collectData(visitRequest);
+        logger.info("DONE crawling SMTP for {} => {}", visitRequest.getDomainName(), smtpVisits);
+        collectedData.put(smtpCrawler, smtpVisits);
       }
-      Map<CrawlerModule<?>, List<?>> collectedData = new HashMap<>();
 
-      collectedData.put(tlsCrawler, tlsCrawlResults);
 
       return VisitResult.builder()
               .visitRequest(visitRequest)
@@ -167,8 +158,6 @@ public class MainCrawler {
               .featuresList(featuresList)
               .vatCrawlResult(vatCrawlResult)
               .siteVisit(siteVisit)
-              .tlsCrawlResults(tlsCrawlResults)
-              .smtpVisit(smtpVisit)
               .collectedData(collectedData)
               .build();
     } finally {

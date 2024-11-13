@@ -48,9 +48,9 @@
 
 * VisitService.save(VisitResult)
 * visitRepository.save(visitResult);
-* for (CrawlResult crawlResult : visitResult.tlsCrawlResult().crawlResults())
-* visitRepository.persist(CrawlResult crawlResult)
-* crawlResult.convertToEntity()
+* for (CrawlResult tlsCrawlResult : visitResult.tlsCrawlResult().crawlResults())
+* visitRepository.persist(CrawlResult tlsCrawlResult)
+* tlsCrawlResult.convertToEntity()
 * save(FullScanEntity fullScan)
 * saveCertificates(Optional<List<Certificate>> chain)
 * save(crawlResultEntity)

@@ -3,7 +3,7 @@ package be.dnsbelgium.mercator.tls.crawler.persistence.repositories;
 import be.dnsbelgium.mercator.tls.crawler.persistence.entities.CertificateEntity;
 import be.dnsbelgium.mercator.tls.crawler.persistence.entities.CrawlResultEntity;
 import be.dnsbelgium.mercator.tls.crawler.persistence.entities.FullScanEntity;
-import be.dnsbelgium.mercator.tls.domain.CrawlResult;
+import be.dnsbelgium.mercator.tls.domain.TlsCrawlResult;
 import be.dnsbelgium.mercator.tls.domain.certificates.Certificate;
 import com.github.f4b6a3.ulid.Ulid;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -46,14 +46,14 @@ public class TlsRepository {
         this.dataSource = dataSource;
     }
 
-    public void persist(CrawlResult crawlResult) {
+    public void persist(TlsCrawlResult tlsCrawlResult) {
         logger.debug("Persisting crawlResult");
-        CrawlResultEntity crawlResultEntity = crawlResult.convertToEntity();
-        if (crawlResult.isFresh()) {
-            save(crawlResult.getFullScanEntity());
+        CrawlResultEntity crawlResultEntity = tlsCrawlResult.convertToEntity();
+        if (tlsCrawlResult.isFresh()) {
+            save(tlsCrawlResult.getFullScanEntity());
         }
-        if (crawlResult.getCertificateChain().isPresent()) {
-            saveCertificates(crawlResult.getCertificateChain().get());
+        if (tlsCrawlResult.getCertificateChain().isPresent()) {
+            saveCertificates(tlsCrawlResult.getCertificateChain().get());
         }
         save(crawlResultEntity);
     }
