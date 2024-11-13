@@ -3,8 +3,6 @@ package eu.bosteels.mercator.mono.visits;
 import be.dnsbelgium.mercator.common.VisitRequest;
 import be.dnsbelgium.mercator.dns.domain.DnsCrawlResult;
 import be.dnsbelgium.mercator.feature.extraction.persistence.HtmlFeatures;
-import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpVisit;
-import be.dnsbelgium.mercator.tls.domain.TlsCrawlResult;
 import be.dnsbelgium.mercator.vat.crawler.persistence.VatCrawlResult;
 import be.dnsbelgium.mercator.vat.domain.SiteVisit;
 import lombok.AccessLevel;
