@@ -39,3 +39,4 @@ out/
 local_files/
 *.duckdb
 data/
+/observability/mono/
