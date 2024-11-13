@@ -58,10 +58,11 @@ public class MainCrawler {
   @Autowired
   public MainCrawler(DnsCrawlService dnsCrawlService,
                      VatCrawlerService vatCrawlerService,
-                     TlsCrawler tlsCrawler,
                      HtmlFeatureExtractor htmlFeatureExtractor,
                      Repository repository,
-                     SmtpCrawler smtpCrawler, MeterRegistry meterRegistry,
+                     SmtpCrawler smtpCrawler,
+                     TlsCrawler tlsCrawler,
+                     MeterRegistry meterRegistry,
                      VisitService visitService) {
     this.dnsCrawlService = dnsCrawlService;
     this.vatCrawlerService = vatCrawlerService;
@@ -89,14 +90,13 @@ public class MainCrawler {
   private void postSave(VisitResult visitResult) {
     Threads.POST_SAVE.incrementAndGet();
     try {
-      if (visitResult.tlsCrawlResult() != null) {
-        for (CrawlResult crawlResult : visitResult.tlsCrawlResult().crawlResults()) {
-          tlsCrawler.addToCache(crawlResult);
-        }
+
+      var dataPerModule = visitResult.getCollectedData();
+      for (CrawlerModule<?> crawlerModule : dataPerModule.keySet()) {
+        var data = dataPerModule.get(crawlerModule);
+        crawlerModule.afterSave(data);
       }
-      if (visitResult.smtpVisit() != null) {
-        smtpCrawler.afterSave(List.of(visitResult.smtpVisit()));
-      }
+
     } finally {
       Threads.POST_SAVE.decrementAndGet();
     }
@@ -131,15 +131,10 @@ public class MainCrawler {
     try {
       DnsCrawlResult dnsCrawlResult = dnsCrawlService.visit(visitRequest);
       if (dnsCrawlResult.getStatus() == CrawlStatus.NXDOMAIN) {
-        return new VisitResult(
-                visitRequest,
-                dnsCrawlResult,
-                null,
-                null,
-                null,
-                null,
-                null
-        );
+        return VisitResult.builder()
+                .visitRequest(visitRequest)
+                .dnsCrawlResult(dnsCrawlResult)
+                .build();
       }
 
       SiteVisit siteVisit = vatCrawlerService.visit(visitRequest);
@@ -147,7 +142,8 @@ public class MainCrawler {
       meterRegistry.counter(COUNTER_WEB_CRAWLS_DONE).increment();
       List<HtmlFeatures> featuresList = findFeatures(visitRequest, siteVisit);
 
-      TlsCrawlResult tlsCrawlResult = tlsCrawler.visit(visitRequest);
+      List<CrawlResult> tlsCrawlResults = tlsCrawler.collectData(visitRequest);
+
       SmtpVisit smtpVisit = SmtpVisit
               .builder()
               .visitId(visitRequest.getVisitId())
@@ -161,15 +157,20 @@ public class MainCrawler {
         logger.info("DONE crawling SMTP for {} => {}", visitRequest.getDomainName(), list);
         smtpVisit = list.getFirst();
       }
-      return new VisitResult(
-              visitRequest,
-              dnsCrawlResult,
-              featuresList,
-              vatCrawlResult,
-              siteVisit,
-              tlsCrawlResult,
-              smtpVisit
-      );
+      Map<CrawlerModule<?>, List<?>> collectedData = new HashMap<>();
+
+      collectedData.put(tlsCrawler, tlsCrawlResults);
+
+      return VisitResult.builder()
+              .visitRequest(visitRequest)
+              .dnsCrawlResult(dnsCrawlResult)
+              .featuresList(featuresList)
+              .vatCrawlResult(vatCrawlResult)
+              .siteVisit(siteVisit)
+              .tlsCrawlResults(tlsCrawlResults)
+              .smtpVisit(smtpVisit)
+              .collectedData(collectedData)
+              .build();
     } finally {
       sample.stop(meterRegistry.timer("crawler.collectData"));
     }

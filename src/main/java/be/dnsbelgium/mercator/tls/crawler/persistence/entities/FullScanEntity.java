@@ -2,7 +2,7 @@ package be.dnsbelgium.mercator.tls.crawler.persistence.entities;
 
 import lombok.*;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
 
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -15,7 +15,7 @@ public class FullScanEntity {
   @Setter
   private String id;
 
-  private ZonedDateTime crawlTimestamp;
+  private Instant crawlTimestamp;
 
   private String ip;
 

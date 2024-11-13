@@ -176,12 +176,11 @@ public class DatabasePerformanceTest {
         executorService.submit(() -> {
           try {
             List<HtmlFeatures> featuresList = List.of(features());
-            VisitResult result = new VisitResult(
-                    null, null, featuresList, null, null, null,null
-            );
+            VisitResult result = VisitResult.builder().featuresList(featuresList).build();
+
             visitService.save(result);
           } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("failed", e);
           }
         });
       }

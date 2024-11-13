@@ -2,7 +2,7 @@ package be.dnsbelgium.mercator.tls.crawler.persistence.entities;
 
 import lombok.*;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
 
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -12,16 +12,13 @@ import java.time.ZonedDateTime;
 @ToString
 public class CrawlResultEntity {
 
-  @Setter
-  private Long id;
-
   private String visitId;
 
   private String hostName;
 
   private String domainName;
 
-  private ZonedDateTime crawlTimestamp;
+  private Instant crawlTimestamp;
 
   private FullScanEntity fullScanEntity;
 

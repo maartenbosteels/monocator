@@ -2,9 +2,12 @@ package be.dnsbelgium.mercator.tls.ports;
 
 import be.dnsbelgium.mercator.common.VisitRequest;
 import be.dnsbelgium.mercator.tls.crawler.persistence.entities.FullScanEntity;
+import be.dnsbelgium.mercator.tls.crawler.persistence.repositories.TlsRepository;
 import be.dnsbelgium.mercator.tls.domain.*;
 import eu.bosteels.mercator.mono.metrics.Threads;
+import eu.bosteels.mercator.mono.visits.CrawlerModule;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,10 +28,11 @@ import static be.dnsbelgium.mercator.tls.metrics.MetricName.COUNTER_VISITS_COMPL
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
-public class TlsCrawler {
+public class TlsCrawler implements CrawlerModule<CrawlResult> {
 
   private final FullScanCache fullScanCache;
   private final TlsScanner tlsScanner;
+  private final TlsRepository tlsRepository;
   private final BlackList blackList;
   private final MeterRegistry meterRegistry;
 
@@ -43,9 +47,11 @@ public class TlsCrawler {
   public TlsCrawler(
           TlsScanner tlsScanner,
           FullScanCache fullScanCache,
+          TlsRepository tlsRepository,
           BlackList blackList, MeterRegistry meterRegistry) {
       this.fullScanCache = fullScanCache;
       this.tlsScanner = tlsScanner;
+      this.tlsRepository = tlsRepository;
       this.blackList = blackList;
       this.meterRegistry = meterRegistry;
   }
@@ -62,27 +68,6 @@ public class TlsCrawler {
         throw new RuntimeException("visitApex == visitWww == allowNoop = false. \n" +
             "Set tls.crawler.allow.noop=false if this is really what you want");
       }
-    }
-  }
-
-  public TlsCrawlResult visit(VisitRequest visitRequest) {
-    try {
-      Threads.TLS.incrementAndGet();
-      List<CrawlResult> results = new ArrayList<>();
-      if (visitApex) {
-        String hostName = visitRequest.getDomainName();
-        CrawlResult crawlResult = visit(hostName, visitRequest);
-        results.add(crawlResult);
-      }
-      if (visitWww) {
-        String hostName = "www." + visitRequest.getDomainName();
-        CrawlResult crawlResult = visit(hostName, visitRequest);
-        results.add(crawlResult);
-      }
-      meterRegistry.counter(COUNTER_VISITS_COMPLETED).increment();
-      return new TlsCrawlResult(results);
-    } finally {
-      Threads.TLS.decrementAndGet();
     }
   }
 
@@ -129,5 +114,59 @@ public class TlsCrawler {
   }
 
 
+  @Override
+  public List<CrawlResult> collectData(VisitRequest visitRequest) {
+    List<CrawlResult> results = new ArrayList<>();
+    try {
+      Threads.TLS.incrementAndGet();
+      if (visitApex) {
+        String hostName = visitRequest.getDomainName();
+        CrawlResult crawlResult = visit(hostName, visitRequest);
+        results.add(crawlResult);
+      }
+      if (visitWww) {
+        String hostName = "www." + visitRequest.getDomainName();
+        CrawlResult crawlResult = visit(hostName, visitRequest);
+        results.add(crawlResult);
+      }
+      meterRegistry.counter(COUNTER_VISITS_COMPLETED).increment();
+    } finally {
+      Threads.TLS.decrementAndGet();
+    }
+    return results;
+  }
 
+  @Override
+  public void save(List<?> collectedData) {
+    for (Object object : collectedData) {
+      if (object instanceof CrawlResult crawlResult) {
+        saveItem(crawlResult);
+      }
+    }
+  }
+
+  @Override
+  public void saveItem(CrawlResult crawlResult) {
+    tlsRepository.persist(crawlResult);
+  }
+
+  @Override
+  public void afterSave(List<?> collectedData) {
+    for (Object object : collectedData) {
+      if (object instanceof CrawlResult crawlResult) {
+        addToCache(crawlResult);
+      }
+    }
+  }
+
+  @Override
+  public List<CrawlResult> find(String visitId) {
+    // TODO
+    throw new NotImplementedException("TODO");
+  }
+
+  @Override
+  public void createTables() {
+    tlsRepository.createTablesTls();
+  }
 }

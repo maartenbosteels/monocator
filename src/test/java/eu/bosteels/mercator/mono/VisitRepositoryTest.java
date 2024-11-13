@@ -7,12 +7,6 @@ import be.dnsbelgium.mercator.dns.dto.RecordType;
 import be.dnsbelgium.mercator.dns.persistence.Request;
 import be.dnsbelgium.mercator.dns.persistence.Response;
 import be.dnsbelgium.mercator.feature.extraction.persistence.HtmlFeatures;
-import be.dnsbelgium.mercator.smtp.SmtpCrawler;
-import be.dnsbelgium.mercator.smtp.persistence.repositories.SmtpRepository;
-import be.dnsbelgium.mercator.tls.crawler.persistence.entities.CertificateEntity;
-import be.dnsbelgium.mercator.tls.crawler.persistence.entities.CrawlResultEntity;
-import be.dnsbelgium.mercator.tls.crawler.persistence.entities.FullScanEntity;
-import be.dnsbelgium.mercator.tls.domain.certificates.Certificate;
 import be.dnsbelgium.mercator.vat.crawler.persistence.PageVisit;
 import be.dnsbelgium.mercator.vat.crawler.persistence.VatCrawlResult;
 import com.github.f4b6a3.ulid.Ulid;
@@ -29,9 +23,6 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
-import java.io.IOException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.ZonedDateTime;
@@ -39,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static be.dnsbelgium.mercator.tls.domain.certificates.CertificateReader.readTestCertificate;
 import static be.dnsbelgium.mercator.test.TestUtils.now;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -47,7 +37,6 @@ class VisitRepositoryTest {
 
   static DuckDataSource dataSource;
   static VisitRepository visitRepository;
-  static SmtpCrawler smtpCrawler;
   static JdbcClient jdbcClient;
   static MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
@@ -59,16 +48,13 @@ class VisitRepositoryTest {
   @BeforeAll
   public static void init() {
     dataSource = new DuckDataSource("jdbc:duckdb:");
-    SmtpRepository smtpRepository = new SmtpRepository(dataSource);
-    smtpCrawler = new SmtpCrawler(smtpRepository, null, null);
-    TableCreator tableCreator = new TableCreator(dataSource, smtpCrawler);
-    tableCreator.init();
-    tableCreator.createVisitTables();
-    visitRepository = new VisitRepository(dataSource, tableCreator, meterRegistry, smtpCrawler);
+    TableCreator tableCreator = new TableCreator(dataSource, null, null);
+    visitRepository = new VisitRepository(dataSource, tableCreator, meterRegistry, null);
     visitRepository.setDatabaseDirectory(tempDir);
     visitRepository.setExportDirectory(tempDir);
     visitRepository.init();
     jdbcClient = JdbcClient.create(dataSource);
+    logger.info("init done");
   }
 
   @Test
@@ -123,7 +109,7 @@ class VisitRepositoryTest {
     List<PageVisit> pageVisits = visitRepository.findPageVisits(pageVisit.getVisitId());
     pageVisits.forEach(System.out::println);
     assertThat(pageVisits).hasSize(1);
-    PageVisit found = pageVisits.get(0);
+    PageVisit found = pageVisits.getFirst();
     assertThat(found.getVisitId()).isEqualTo(pageVisit.getVisitId());
     assertThat(found.getVatValues()).isEqualTo(pageVisit.getVatValues());
     assertThat(found.getHtml()).isEqualTo(pageVisit.getHtml());
@@ -154,8 +140,8 @@ class VisitRepositoryTest {
     List<Map<String, Object>> rows = jdbcClient.sql("select * from web_visit").query().listOfRows();
     System.out.println("rows = " + rows);
     assertThat(rows).hasSize(1);
-    assertThat(rows.get(0).get("visit_id").toString()).isEqualTo(crawlResult.getVisitId());
-    assertThat(rows.get(0).get("domain_name")).isEqualTo(crawlResult.getDomainName());
+    assertThat(rows.getFirst().get("visit_id").toString()).isEqualTo(crawlResult.getVisitId());
+    assertThat(rows.getFirst().get("domain_name")).isEqualTo(crawlResult.getDomainName());
 
     Optional<VatCrawlResult> result = visitRepository.findVatCrawlResult(visitId);
     assertThat(result.isPresent()).isTrue();
@@ -192,61 +178,6 @@ class VisitRepositoryTest {
               assertThat(ts).isEqualTo(timestamp);
               assertThat(ts.toInstant()).isEqualTo(instant);
             });
-  }
-
-
-
-  @Test
-  public void certificate() throws CertificateException, IOException {
-    X509Certificate x509Certificate = readTestCertificate("dnsbelgium.be.pem");
-    Certificate certificate = Certificate.from(x509Certificate);
-    logger.info("info = {}", certificate);
-    logger.info("info = {}", certificate.prettyString());
-    visitRepository.save(certificate.asEntity());
-    // on conflict do nothing
-    visitRepository.save(certificate.asEntity());
-  }
-
-  @Test
-  void tls_crawl_result() {
-    CertificateEntity certificateEntity = CertificateEntity.builder()
-            .sha256fingerprint("12345")
-            .build();
-
-    visitRepository.save(certificateEntity);
-    logger.info("certificateEntity = {}", certificateEntity);
-
-    FullScanEntity fullScanEntity = FullScanEntity.builder()
-            .serverName("dnsbelgium.be")
-            .connectOk(true)
-            .highestVersionSupported("TLS 1.3")
-            .lowestVersionSupported("TLS 1.2")
-            .supportTls_1_3(true)
-            .supportTls_1_2(true)
-            .supportTls_1_1(false)
-            .supportTls_1_0(false)
-            .supportSsl_3_0(false)
-            .supportSsl_2_0(false)
-            .errorTls_1_1("No can do")
-            .errorTls_1_0("Go away")
-            .errorSsl_3_0("Why?")
-            .errorSsl_2_0("Protocol error")
-            .ip("10.20.30.40")
-            .crawlTimestamp(ZonedDateTime.now())
-            .build();
-
-    CrawlResultEntity crawlResultEntity = CrawlResultEntity.builder()
-            .fullScanEntity(fullScanEntity)
-            .domainName("dns.be")
-            .hostName("www.dns.be")
-            .visitId(Ulid.fast().toString())
-            .crawlTimestamp(ZonedDateTime.now())
-            .leafCertificateEntity(certificateEntity)
-            .build();
-
-    visitRepository.save(fullScanEntity);
-    visitRepository.save(crawlResultEntity);
-    logger.info("AFTER: crawlResultEntity = {}", crawlResultEntity);
   }
 
   @Test

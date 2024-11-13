@@ -5,9 +5,10 @@ import be.dnsbelgium.mercator.tls.crawler.persistence.entities.CertificateEntity
 import be.dnsbelgium.mercator.tls.crawler.persistence.entities.CrawlResultEntity;
 import be.dnsbelgium.mercator.tls.crawler.persistence.entities.FullScanEntity;
 import be.dnsbelgium.mercator.tls.domain.certificates.Certificate;
+import lombok.Getter;
 import lombok.ToString;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,7 +17,7 @@ import static java.time.Instant.now;
 @ToString
 public class CrawlResult {
 
-  private final ZonedDateTime crawlTimestamp;
+  private final Instant crawlTimestamp;
 
   private final String hostName;
 
@@ -26,10 +27,11 @@ public class CrawlResult {
 
   private final FullScan fullScan;
 
+  @Getter
   private final FullScanEntity fullScanEntity;
 
   private CrawlResult(String hostName, VisitRequest visitRequest, SingleVersionScan singleVersionScan, FullScanEntity fullScanEntity, FullScan fullScan) {
-    this.crawlTimestamp = ZonedDateTime.now();
+    this.crawlTimestamp = Instant.now();
     this.singleVersionScan = singleVersionScan;
     this.visitRequest = visitRequest;
     this.fullScan = fullScan;
@@ -42,16 +44,12 @@ public class CrawlResult {
   }
 
   public static CrawlResult fromScan(String hostName, VisitRequest visitRequest, FullScan fullScan) {
-    ZonedDateTime crawlTimestamp = ZonedDateTime.now();
+    Instant crawlTimestamp = Instant.now();
     FullScanEntity fullScanEntity = convert(crawlTimestamp, fullScan);
     return new CrawlResult(hostName, visitRequest, null, fullScanEntity, fullScan);
   }
 
-  public FullScanEntity getFullScanEntity() {
-    return fullScanEntity;
-  }
-
-  public boolean isFresh() {
+    public boolean isFresh() {
     return fullScan != null;
   }
 
@@ -115,7 +113,7 @@ public class CrawlResult {
         .build();
   }
 
-  public static FullScanEntity convert(ZonedDateTime timestamp, FullScan fullScan) {
+  public static FullScanEntity convert(Instant timestamp, FullScan fullScan) {
     var tls13 = fullScan.get(TlsProtocolVersion.TLS_1_3);
     var tls12 = fullScan.get(TlsProtocolVersion.TLS_1_2);
     var tls11 = fullScan.get(TlsProtocolVersion.TLS_1_1);

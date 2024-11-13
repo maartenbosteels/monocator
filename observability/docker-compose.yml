@@ -18,6 +18,8 @@ services:
     volumes:
       - ./prometheus:/etc/prometheus
       - prom_data:/prometheus
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   grafana:
     image: grafana/grafana:latest
@@ -34,6 +36,8 @@ services:
     secrets:
       - grafana-admin-username
       - grafana-admin-password
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 volumes:
   grafana-storage:

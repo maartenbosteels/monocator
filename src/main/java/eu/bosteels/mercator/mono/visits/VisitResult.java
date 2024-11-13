@@ -4,18 +4,34 @@ import be.dnsbelgium.mercator.common.VisitRequest;
 import be.dnsbelgium.mercator.dns.domain.DnsCrawlResult;
 import be.dnsbelgium.mercator.feature.extraction.persistence.HtmlFeatures;
 import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpVisit;
+import be.dnsbelgium.mercator.tls.domain.CrawlResult;
 import be.dnsbelgium.mercator.tls.domain.TlsCrawlResult;
 import be.dnsbelgium.mercator.vat.crawler.persistence.VatCrawlResult;
 import be.dnsbelgium.mercator.vat.domain.SiteVisit;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 
 import java.util.List;
+import java.util.Map;
 
-public record VisitResult(
-        VisitRequest visitRequest,
-        DnsCrawlResult dnsCrawlResult,
-        List<HtmlFeatures> featuresList,
-        VatCrawlResult vatCrawlResult,
-        SiteVisit siteVisit,
-        TlsCrawlResult tlsCrawlResult,
-        SmtpVisit smtpVisit) {
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
+@Getter
+public class VisitResult {
+
+    VisitRequest visitRequest;
+    DnsCrawlResult dnsCrawlResult;
+    List<HtmlFeatures> featuresList;
+    VatCrawlResult vatCrawlResult;
+    SiteVisit siteVisit;
+    TlsCrawlResult tlsCrawlResult;
+    SmtpVisit smtpVisit;
+
+    List<CrawlResult> tlsCrawlResults;
+
+    Map<CrawlerModule<?>, List<?>> collectedData;
+
+
 }

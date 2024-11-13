@@ -8,17 +8,13 @@ import be.dnsbelgium.mercator.dns.persistence.Response;
 import be.dnsbelgium.mercator.dns.persistence.ResponseGeoIp;
 import be.dnsbelgium.mercator.feature.extraction.persistence.HtmlFeatures;
 import be.dnsbelgium.mercator.smtp.SmtpCrawler;
-import be.dnsbelgium.mercator.tls.crawler.persistence.entities.CertificateEntity;
-import be.dnsbelgium.mercator.tls.crawler.persistence.entities.CrawlResultEntity;
-import be.dnsbelgium.mercator.tls.crawler.persistence.entities.FullScanEntity;
-import be.dnsbelgium.mercator.tls.domain.CrawlResult;
-import be.dnsbelgium.mercator.tls.domain.certificates.Certificate;
 import be.dnsbelgium.mercator.vat.crawler.persistence.PageVisit;
 import be.dnsbelgium.mercator.vat.crawler.persistence.VatCrawlResult;
 import be.dnsbelgium.mercator.vat.domain.Link;
 import be.dnsbelgium.mercator.vat.domain.Page;
 import be.dnsbelgium.mercator.vat.domain.SiteVisit;
 import com.github.f4b6a3.ulid.Ulid;
+import eu.bosteels.mercator.mono.visits.CrawlerModule;
 import eu.bosteels.mercator.mono.visits.VisitResult;
 import io.micrometer.core.annotation.Timed;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -41,6 +37,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Array;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -66,10 +64,6 @@ public class VisitRepository {
   private int databaseCounter = 0;
   private String databaseName;
   private File databaseFile;
-
-  @Setter
-  @Value("${vat.crawler.persist.page.visits:false}")
-  private boolean persistPageVisits = false;
 
   @Value("${visits.export.directory}")
   @Setter @Getter
@@ -144,35 +138,34 @@ public class VisitRepository {
       attachAndUse();
 
       // added ugly null checks for now, until we refactor towards CrawlerModule's
-      if (visitResult.featuresList() != null) {
-        for (HtmlFeatures htmlFeatures : visitResult.featuresList()) {
+      if (visitResult.getFeaturesList() != null) {
+        for (HtmlFeatures htmlFeatures : visitResult.getFeaturesList()) {
           save(htmlFeatures);
         }
       }
 
-      if (visitResult.dnsCrawlResult() != null) {
-        save(visitResult.dnsCrawlResult());
+      if (visitResult.getDnsCrawlResult() != null) {
+        save(visitResult.getDnsCrawlResult());
       }
 
-      if (visitResult.vatCrawlResult() != null) {
-        save(visitResult.vatCrawlResult());
+      if (visitResult.getVatCrawlResult() != null) {
+        save(visitResult.getVatCrawlResult());
       }
 
-      if (visitResult.siteVisit() != null) {
-        savePageVisits(visitResult.visitRequest(), visitResult.siteVisit());
+      if (visitResult.getSiteVisit() != null) {
+        savePageVisits(visitResult.getVisitRequest(), visitResult.getSiteVisit());
       }
 
-      if (visitResult.tlsCrawlResult() != null) {
-        for (CrawlResult crawlResult : visitResult.tlsCrawlResult().crawlResults()) {
-          persist(crawlResult);
-        }
+      for (CrawlerModule<?> crawlerModule : visitResult.getCollectedData().keySet()) {
+        List<?> data = visitResult.getCollectedData().get(crawlerModule);
+        crawlerModule.save(data);
       }
 
-      if (visitResult.smtpVisit() != null) {
-        smtpCrawler.saveItem(visitResult.smtpVisit());
+      if (visitResult.getSmtpVisit() != null) {
+        smtpCrawler.saveItem(visitResult.getSmtpVisit());
       }
       var duration = Duration.between(start, Instant.now());
-      logger.info("Done saving VisitResult for {}, took {}", visitResult.visitRequest(), duration);
+      logger.info("Done saving VisitResult for {}, took {}", visitResult.getVisitRequest(), duration);
 
     } catch (Exception e) {
       logger.info("save on {} started at {} failed", dbName, start);
@@ -313,8 +306,7 @@ public class VisitRepository {
               String matchingUrl = rs.getString("matching_url");
               Instant crawl_started = instant(rs.getTimestamp("crawl_started"));
               Instant crawl_finished = instant(rs.getTimestamp("crawl_finished"));
-              Object[] array = (Object[]) rs.getArray("visited_urls").getArray();
-              List<String> visitedUrls = Arrays.stream(array).map(o -> (String)o).toList();
+              List<String> visitedUrls = getList(rs, "visited_urls");
               logger.info("visitedUrls = {}", visitedUrls);
 
               for (String visitedUrl : visitedUrls) {
@@ -370,6 +362,13 @@ public class VisitRepository {
                     con.createArrayOf("text", list.toArray())
     );
   }
+
+  public static List<String> getList(ResultSet rs, String columnName) throws SQLException {
+    var array = rs.getArray(columnName).getArray();
+    return Arrays.stream((Object[]) array).map(Object::toString).toList();
+  }
+
+
 
   public void save(@NotNull PageVisit pageVisit) {
     logger.debug("Saving PageVisit with url={}", pageVisit.getUrl());
@@ -647,185 +646,6 @@ public class VisitRepository {
             .param("ms", millis)
             .param("url", h.url)
             .update();
-  }
-
-  public void persist(CrawlResult crawlResult) {
-    logger.debug("Persisting crawlResult");
-    CrawlResultEntity crawlResultEntity = crawlResult.convertToEntity();
-    if (crawlResult.isFresh()) {
-      save(crawlResult.getFullScanEntity());
-    }
-    saveCertificates(crawlResult.getCertificateChain());
-    save(crawlResultEntity);
-  }
-
-  private void saveCertificates(Optional<List<Certificate>> chain) {
-    if (chain.isPresent()) {
-      // We have to save the chain in reversed order because of the foreign keys
-      List<Certificate> reversed = new ArrayList<>(chain.get());
-      Collections.reverse(reversed);
-      for (Certificate certificate : reversed) {
-        // We always call save, the insert will be a no-op when a cert with this fingerprint already exists
-        // because of the 'ON CONFLICT DO NOTHING' clause
-        CertificateEntity certificateEntity = certificate.asEntity();
-        save(certificateEntity);
-        logger.debug("certificate saved: {}", certificate);
-      }
-    }
-  }
-
-  public void save(CrawlResultEntity crawlResult) {
-    var sample = Timer.start(meterRegistry);
-    String insert = """
-                insert into tls_crawl_result(
-                visit_id,
-                domain_name,
-                crawl_timestamp,
-                full_scan,
-                host_name_matches_certificate,
-                host_name,
-                leaf_certificate,
-                certificate_expired,
-                certificate_too_soon,
-                chain_trusted_by_java_platform
-                )
-            """ + values(10);
-    String leafCertFingerPrint = (crawlResult.getLeafCertificateEntity() == null) ? null : crawlResult.getLeafCertificateEntity().getSha256fingerprint();
-    jdbcTemplate.update(
-            insert,
-            crawlResult.getVisitId(),
-            crawlResult.getDomainName(),
-            timestamp(crawlResult.getCrawlTimestamp()),
-            crawlResult.getFullScanEntity().getId(),
-            crawlResult.isHostNameMatchesCertificate(),
-            crawlResult.getHostName(),
-            leafCertFingerPrint,
-            crawlResult.isCertificateExpired(),
-            crawlResult.isCertificateTooSoon(),
-            crawlResult.isChainTrustedByJavaPlatform()
-    );
-    sample.stop(meterRegistry.timer("repository.insert.tls.crawl.result"));
-  }
-
-  public void save(CertificateEntity certificate) {
-    var sample = Timer.start(meterRegistry);
-    var insert = """
-            insert into tls_certificate (
-                sha256_fingerprint,
-                version,
-                public_key_schema,
-                public_key_length,
-                issuer,
-                subject,
-                signature_hash_algorithm,
-                signed_by_sha256,
-                serial_number_hex,
-                subject_alt_names,
-                not_before,
-                not_after,
-                insert_timestamp
-            )
-            values (?,?,?,?,?,?,?,?,?,?,?,?, current_timestamp)
-            """;
-    // previously we had a primary key on sha256_fingerprint, and 'ON CONFLICT DO NOTHING' in the above statement,
-    // but we still got 'Failed to commit: PRIMARY KEY or UNIQUE constraint violated: duplicate key'
-    // Now trying without primary key
-
-    //var signedBy = ( certificate.getSignedBy()== null) ? null : certificate.getSignedBy().getSha256Fingerprint();
-    var signedBy = certificate.getSignedBySha256();
-    jdbcTemplate.update(insert,
-            certificate.getSha256fingerprint(),
-            certificate.getVersion(),
-            certificate.getPublicKeySchema(),
-            certificate.getPublicKeyLength(),
-            certificate.getIssuer(),
-            certificate.getSubject(),
-            certificate.getSignatureHashAlgorithm(),
-            signedBy,
-            certificate.getSerialNumberHex(),
-            array(certificate.getSubjectAltNames()),
-            timestamp(certificate.getNotBefore()),
-            timestamp(certificate.getNotAfter())
-    );
-    sample.stop(meterRegistry.timer("repository.insert.tls.certificate"));
-  }
-
-  public void save(FullScanEntity fullScan) {
-    var sample = Timer.start(meterRegistry);
-    var insert = """
-            insert into tls_full_scan(
-                    id,
-                    crawl_timestamp,
-                    ip,
-                    server_name,
-                    connect_ok,
-                    support_tls_1_3,
-                    support_tls_1_2,
-                    support_tls_1_1,
-                    support_tls_1_0,
-                    support_ssl_3_0,
-                    support_ssl_2_0,
-                    selected_cipher_tls_1_3,
-                    selected_cipher_tls_1_2,
-                    selected_cipher_tls_1_1,
-                    selected_cipher_tls_1_0,
-                    selected_cipher_ssl_3_0,
-                    accepted_ciphers_ssl_2_0,
-                    lowest_version_supported,
-                    highest_version_supported,
-                    error_tls_1_3,
-                    error_tls_1_2,
-                    error_tls_1_1,
-                    error_tls_1_0,
-                    error_ssl_3_0,
-                    error_ssl_2_0,
-                    millis_tls_1_3,
-                    millis_tls_1_2,
-                    millis_tls_1_1,
-                    millis_tls_1_0,
-                    millis_ssl_3_0,
-                    millis_ssl_2_0,
-                    total_duration_in_ms
-                    )
-            """ + values(32);
-    String id = Ulid.fast().toString();
-    fullScan.setId(id);
-    jdbcTemplate.update(
-            insert,
-            fullScan.getId(),
-            timestamp(fullScan.getCrawlTimestamp()),
-            fullScan.getIp(),
-            fullScan.getServerName(),
-            fullScan.isConnectOk(),
-            fullScan.isSupportTls_1_3(),
-            fullScan.isSupportTls_1_2(),
-            fullScan.isSupportTls_1_1(),
-            fullScan.isSupportTls_1_0(),
-            fullScan.isSupportSsl_3_0(),
-            fullScan.isSupportSsl_2_0(),
-            fullScan.getSelectedCipherTls_1_3(),
-            fullScan.getSelectedCipherTls_1_2(),
-            fullScan.getSelectedCipherTls_1_1(),
-            fullScan.getSelectedCipherTls_1_0(),
-            fullScan.getSelectedCipherSsl_3_0(),
-            null, // TODO: accepted_ciphers_ssl_2_0
-            fullScan.getLowestVersionSupported(),
-            fullScan.getHighestVersionSupported(),
-            fullScan.getErrorTls_1_3(),
-            fullScan.getErrorTls_1_2(),
-            fullScan.getErrorTls_1_1(),
-            fullScan.getErrorTls_1_0(),
-            fullScan.getErrorSsl_3_0(),
-            fullScan.getErrorSsl_2_0(),
-            fullScan.getMillis_tls_1_3(),
-            fullScan.getMillis_tls_1_2(),
-            fullScan.getMillis_tls_1_1(),
-            fullScan.getMillis_tls_1_0(),
-            fullScan.getMillis_ssl_3_0(),
-            fullScan.getMillis_ssl_2_0(),
-            fullScan.getTotalDurationInMs()
-    );
-    sample.stop(meterRegistry.timer("repository.insert.tls.full.scan"));
   }
 
   private void savePageVisits(VisitRequest visitRequest, SiteVisit siteVisit) {

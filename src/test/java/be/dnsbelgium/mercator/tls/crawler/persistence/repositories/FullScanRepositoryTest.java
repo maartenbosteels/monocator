@@ -4,7 +4,7 @@ import be.dnsbelgium.mercator.tls.crawler.persistence.entities.FullScanEntity;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -30,7 +30,7 @@ public class FullScanRepositoryTest {
         .errorSsl_3_0("Why?")
         .errorSsl_2_0("Protocol error")
         .ip("10.20.30.40")
-        .crawlTimestamp(ZonedDateTime.now())
+        .crawlTimestamp(Instant.now())
         .build();
     logger.info("BEFORE fullScanEntity = {}", fullScanEntity);
   }

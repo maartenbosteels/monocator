@@ -2,6 +2,7 @@ package eu.bosteels.mercator.mono.persistence;
 
 import be.dnsbelgium.mercator.DuckDataSource;
 import be.dnsbelgium.mercator.smtp.SmtpCrawler;
+import be.dnsbelgium.mercator.tls.ports.TlsCrawler;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,11 +18,13 @@ public class TableCreator {
     private static final Logger logger = LoggerFactory.getLogger(TableCreator.class);
 
     private final SmtpCrawler smtpCrawler;
+    private final TlsCrawler tlsCrawler;
 
     @Autowired
-    public TableCreator(DuckDataSource dataSource, SmtpCrawler smtpCrawler) {
+    public TableCreator(DuckDataSource dataSource, SmtpCrawler smtpCrawler, TlsCrawler tlsCrawler) {
         this.template = new JdbcTemplate(dataSource);
         this.smtpCrawler = smtpCrawler;
+        this.tlsCrawler = tlsCrawler;
     }
 
     @PostConstruct
@@ -34,9 +37,14 @@ public class TableCreator {
         createTablesDns();
         createTablesWeb();
         createTableFeatures();
-        createTablesTls();
         blacklistEntry();
-        smtpCrawler.createTables();
+        // ugly null checks until we have refactored all crawlers to CrawlerModule
+        if (smtpCrawler != null) {
+            smtpCrawler.createTables();
+        }
+        if (tlsCrawler != null) {
+            tlsCrawler.createTables();
+        }
     }
 
     private void createWorkTables() {
@@ -221,79 +229,4 @@ public class TableCreator {
 
     }
 
-    public void createTablesTls() {
-        var ddl_certificate = """
-                create table if not exists tls_certificate
-                (
-                    sha256_fingerprint       varchar(256), -- logically a primary key
-                    version                  integer      not null,
-                    public_key_schema        varchar(256),
-                    public_key_length        integer,
-                    not_before               timestamp,
-                    not_after                timestamp,
-                    issuer                   varchar(500),
-                    subject                  varchar(500),
-                    signature_hash_algorithm varchar(256),
-                    signed_by_sha256         varchar(256),  --logically references tls_certificate,
-                    subject_alt_names        varchar[],
-                    serial_number_hex        varchar(64),
-                    insert_timestamp         timestamp default CURRENT_TIMESTAMP
-                )
-                """;
-        execute(ddl_certificate);
-        var ddl_full_scan = """
-                create table if not exists tls_full_scan
-                (
-                    id                        varchar                     primary key,
-                    crawl_timestamp           timestamp                   not null,
-                    ip                        varchar(255),
-                    server_name               varchar(128)                not null,
-                    connect_ok                boolean                     not null,
-                    support_tls_1_3           boolean,
-                    support_tls_1_2           boolean,
-                    support_tls_1_1           boolean,
-                    support_tls_1_0           boolean,
-                    support_ssl_3_0           boolean,
-                    support_ssl_2_0           boolean,
-                    selected_cipher_tls_1_3   varchar,
-                    selected_cipher_tls_1_2   varchar,
-                    selected_cipher_tls_1_1   varchar,
-                    selected_cipher_tls_1_0   varchar,
-                    selected_cipher_ssl_3_0   varchar,
-                    accepted_ciphers_ssl_2_0  varchar[],
-                    lowest_version_supported  varchar,
-                    highest_version_supported varchar,
-                    error_tls_1_3             varchar,
-                    error_tls_1_2             varchar,
-                    error_tls_1_1             varchar,
-                    error_tls_1_0             varchar,
-                    error_ssl_3_0             varchar,
-                    error_ssl_2_0             varchar,
-                    millis_ssl_2_0            integer,
-                    millis_ssl_3_0            integer,
-                    millis_tls_1_0            integer,
-                    millis_tls_1_1            integer,
-                    millis_tls_1_2            integer,
-                    millis_tls_1_3            integer,
-                    total_duration_in_ms      integer
-                )
-                """;
-        execute(ddl_full_scan);
-        var ddl_tls_crawl_result = """
-                create table if not exists tls_crawl_result
-                (
-                    visit_id                       varchar(26)                     not null,
-                    domain_name                    varchar(128)                    not null,
-                    crawl_timestamp                timestamp                       not null,
-                    full_scan                      varchar                         not null,  -- logically references tls_full_scan,
-                    host_name_matches_certificate  boolean,
-                    host_name                      varchar(128)                    not null,
-                    leaf_certificate               varchar(256),
-                    certificate_expired            boolean,
-                    certificate_too_soon           boolean,
-                    chain_trusted_by_java_platform boolean
-                )
-                """;
-        execute(ddl_tls_crawl_result);
-    }
 }
