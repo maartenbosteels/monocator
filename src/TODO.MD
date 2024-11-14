@@ -1,6 +1,39 @@
 * Crawler interface + implementations
 
 
+# web / vat
+
+void save(@NotNull PageVisit pageVisit)         => insert into web_page_visit
+void save(@NotNull HtmlFeatures h)              => insert into html_features
+void save(@NotNull VatCrawlResult crawlResult)  => insert into web_visit
+
+# SiteVisit
+* Map<Link, Page> visitedPages
+* Map<HttpUrl, PrioritizedLink> todoList
+* final HttpUrl baseURL
+* HttpUrl finalUrl
+
+# VatCrawlResult
+* String visitId;
+* String domainName;
+* String startUrl;
+* String matchingUrl;
+* Instant crawlStarted;
+* Instant crawlFinished;
+* List<String> vatValues;
+* List<String> visitedUrls;
+
+=> saved in table web_visit (vatValues is not persisted ??)
+
+
+# HtmlFeatures
+* deduced from Page (siteVisit.getVisitedPages())
+
+# Page
+* be.dnsbelgium.mercator.vat.domain
+=> web_page_visit
+
+
 # tls
 
 ## package be.dnsbelgium.mercator.tls.crawler.persistence.entities

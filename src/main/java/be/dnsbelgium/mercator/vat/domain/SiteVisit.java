@@ -50,9 +50,6 @@ public class SiteVisit {
     visitedURLs.add(page.getUrl());
     visitedURLs.add(link.getUrl());
 
-    // TODO: should we use page or link to mark URL as done ?
-    // probably both
-
     todoList.remove(page.getUrl());
     todoList.remove(link.getUrl());
 

@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Component
-@Slf4j(value = "logger")
 public class SmtpCrawler implements CrawlerModule<SmtpVisit> {
 
   private final SmtpRepository smtpRepository;

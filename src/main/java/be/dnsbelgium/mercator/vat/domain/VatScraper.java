@@ -95,8 +95,6 @@ public class VatScraper {
     siteVisit.markVisited(link);
     siteVisit.add(link, page);
 
-    // TODO: call feature extraction
-
     if (!page.isVatFound()) {
       Set<Link> innerLinks = page.getInnerLinks();
       for (Link innerLink : innerLinks) {
@@ -131,7 +129,8 @@ public class VatScraper {
       logger.debug("No valid VAT values found");
       // let's show_tables log VAT values with wrong checksum
       List<String> vatLikeValues = vatFinder.findVatValues(text);
-      if (vatLikeValues.size() > 0 && vatLikeValues.size() < 3) {
+      int countVatLikeValues = vatLikeValues.size();
+      if (countVatLikeValues > 0 && countVatLikeValues < 3) {
         logger.debug("{} => Found VAT-like values {}", page.getUrl(), vatLikeValues);
       }
     }

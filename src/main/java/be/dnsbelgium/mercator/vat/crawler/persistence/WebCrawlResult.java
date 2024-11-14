@@ -1,5 +1,6 @@
 package be.dnsbelgium.mercator.vat.crawler.persistence;
 
+import be.dnsbelgium.mercator.feature.extraction.persistence.HtmlFeatures;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,7 +14,7 @@ import java.util.List;
 @Setter
 @Builder
 @ToString
-public class VatCrawlResult {
+public class WebCrawlResult {
 
   private String visitId;
   private String domainName;
@@ -26,6 +27,9 @@ public class VatCrawlResult {
 
   private List<String> vatValues;
   private List<String> visitedUrls;
+
+  private List<PageVisit> pageVisits;
+  private List<HtmlFeatures> htmlFeatures;
 
   public void abbreviateData() {
     domainName = StringUtils.abbreviate(domainName, 255);

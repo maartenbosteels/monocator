@@ -2,7 +2,11 @@ package eu.bosteels.mercator.mono;
 
 import be.dnsbelgium.mercator.common.VisitIdGenerator;
 import be.dnsbelgium.mercator.feature.extraction.persistence.HtmlFeatures;
+import be.dnsbelgium.mercator.vat.WebCrawler;
+import be.dnsbelgium.mercator.vat.crawler.persistence.WebCrawlResult;
+import be.dnsbelgium.mercator.vat.crawler.persistence.WebRepository;
 import eu.bosteels.mercator.mono.persistence.VisitRepository;
+import eu.bosteels.mercator.mono.visits.CrawlerModule;
 import eu.bosteels.mercator.mono.visits.VisitResult;
 import eu.bosteels.mercator.mono.visits.VisitService;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,8 +26,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -47,7 +50,13 @@ public class DatabasePerformanceTest {
   VisitRepository visitRepository;
 
   @Autowired
+  WebRepository webRepository;
+
+  @Autowired
   VisitService visitService;
+
+  @Autowired
+  WebCrawler webCrawler;
 
   @Autowired
   PlatformTransactionManager transactionManager;
@@ -60,7 +69,7 @@ public class DatabasePerformanceTest {
 
   @Test
   @Transactional
-  public void htmlFeatures() {
+  public void htmlFeatures() throws InterruptedException {
     visitRepository.attachAndUse();
     for (int k=0; k<10; k++) {
       Instant start = Instant.now();
@@ -72,13 +81,13 @@ public class DatabasePerformanceTest {
         htmlFeatures.body_text = "hello world";
         htmlFeatures.external_hosts = List.of("google.com", "facebook.com");
         htmlFeatures.linkedin_links = List.of("linkedin.com/abc", "https://linkedin.com/xxx");
-        visitRepository.save(htmlFeatures);
+        webRepository.save(htmlFeatures);
       }
       Instant done = Instant.now();
       Duration duration = Duration.between(start, done);
       logger.info("saving rows took {}", duration);
-      //logger.info("Sleeping 60s to give prometheus time to scrape us");
-      //Thread.sleep(60_000);
+      logger.info("Sleeping 60s to give prometheus time to scrape us");
+      Thread.sleep(60_000);
     }
   }
 
@@ -138,11 +147,11 @@ public class DatabasePerformanceTest {
             TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
             transactionTemplate.execute(status -> {
               visitRepository.attachAndUse();
-              visitRepository.save(features());
+              webRepository.save(features());
               return null;
             });
           } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("error", e);
           }
         });
       }
@@ -172,11 +181,22 @@ public class DatabasePerformanceTest {
       logger.info("starting with loop {} out of {}", k+1, loops);
       ExecutorService executorService = Executors.newFixedThreadPool(threads);
       Instant start = Instant.now();
+
+
       for (int i=0; i<rows; i++ ) {
         executorService.submit(() -> {
           try {
             List<HtmlFeatures> featuresList = List.of(features());
-            VisitResult result = VisitResult.builder().featuresList(featuresList).build();
+            Map<CrawlerModule<?>, List<?>> data = new HashMap<>();
+
+            List<WebCrawlResult> crawlResults = new ArrayList<>();
+            WebCrawlResult webCrawlResult = WebCrawlResult.builder().htmlFeatures(featuresList).build();
+            crawlResults.add(webCrawlResult);
+            data.put(webCrawler, crawlResults);
+
+            VisitResult result = VisitResult.builder()
+                    .collectedData(data)
+                    .build();
 
             visitService.save(result);
           } catch (Exception e) {

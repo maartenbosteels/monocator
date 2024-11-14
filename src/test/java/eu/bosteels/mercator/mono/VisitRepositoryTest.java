@@ -6,9 +6,7 @@ import be.dnsbelgium.mercator.dns.domain.DnsCrawlResult;
 import be.dnsbelgium.mercator.dns.dto.RecordType;
 import be.dnsbelgium.mercator.dns.persistence.Request;
 import be.dnsbelgium.mercator.dns.persistence.Response;
-import be.dnsbelgium.mercator.feature.extraction.persistence.HtmlFeatures;
-import be.dnsbelgium.mercator.vat.crawler.persistence.PageVisit;
-import be.dnsbelgium.mercator.vat.crawler.persistence.VatCrawlResult;
+import be.dnsbelgium.mercator.vat.crawler.persistence.WebRepository;
 import com.github.f4b6a3.ulid.Ulid;
 import eu.bosteels.mercator.mono.persistence.TableCreator;
 import eu.bosteels.mercator.mono.persistence.VisitRepository;
@@ -25,10 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.File;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 import static be.dnsbelgium.mercator.test.TestUtils.now;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,8 +43,9 @@ class VisitRepositoryTest {
   @BeforeAll
   public static void init() {
     dataSource = new DuckDataSource("jdbc:duckdb:");
-    TableCreator tableCreator = new TableCreator(dataSource, null, null);
-    visitRepository = new VisitRepository(dataSource, tableCreator, meterRegistry, null);
+    WebRepository webRepository = new WebRepository(dataSource, meterRegistry);
+    TableCreator tableCreator = new TableCreator(dataSource, null, null, webRepository);
+    visitRepository = new VisitRepository(dataSource, tableCreator, meterRegistry);
     visitRepository.setDatabaseDirectory(tempDir);
     visitRepository.setExportDirectory(tempDir);
     visitRepository.init();
@@ -91,71 +87,6 @@ class VisitRepositoryTest {
   }
 
   @Test
-  public void savePageVisit() {
-    var vat_values = List.of("double quote \" here", "abc", "", "[0]{1}(2)'x'");
-    PageVisit pageVisit = PageVisit.builder()
-            .visitId(VisitIdGenerator.generate())
-            .path("/example?id=455")
-            .url("https://www.google.com")
-            .bodyText("This is a test")
-            .crawlFinished(now())
-            .crawlStarted(now().minusMillis(456))
-            .domainName("google.com")
-            .vatValues(vat_values)
-            .statusCode(0)
-            .linkText("contact us")
-            .build();
-    visitRepository.save(pageVisit);
-    List<PageVisit> pageVisits = visitRepository.findPageVisits(pageVisit.getVisitId());
-    pageVisits.forEach(System.out::println);
-    assertThat(pageVisits).hasSize(1);
-    PageVisit found = pageVisits.getFirst();
-    assertThat(found.getVisitId()).isEqualTo(pageVisit.getVisitId());
-    assertThat(found.getVatValues()).isEqualTo(pageVisit.getVatValues());
-    assertThat(found.getHtml()).isEqualTo(pageVisit.getHtml());
-    assertThat(found.getBodyText()).isEqualTo(pageVisit.getBodyText());
-    assertThat(found.getUrl()).isEqualTo(pageVisit.getUrl());
-    assertThat(found.getDomainName()).isEqualTo(pageVisit.getDomainName());
-    assertThat(found.getLinkText()).isEqualTo(pageVisit.getLinkText());
-    assertThat(found.getStatusCode()).isEqualTo(pageVisit.getStatusCode());
-    assertThat(found.getPath()).isEqualTo(pageVisit.getPath());
-    assertThat(found.getCrawlStarted()).isEqualTo(pageVisit.getCrawlStarted());
-    assertThat(found.getCrawlFinished()).isEqualTo(pageVisit.getCrawlFinished());
-    assertThat(found).isEqualTo(pageVisit);
-  }
-
-
-  @Test
-  public void webVisit() {
-    String visitId = VisitIdGenerator.generate();
-    VatCrawlResult crawlResult = VatCrawlResult
-            .builder()
-            .visitId(visitId)
-            .crawlStarted(now())
-            .crawlFinished(now().plusMillis(126))
-            .domainName("google.be")
-            .visitedUrls(List.of("https://www.google.be", "https://google.com?countr=be"))
-            .build();
-    visitRepository.save(crawlResult);
-    List<Map<String, Object>> rows = jdbcClient.sql("select * from web_visit").query().listOfRows();
-    System.out.println("rows = " + rows);
-    assertThat(rows).hasSize(1);
-    assertThat(rows.getFirst().get("visit_id").toString()).isEqualTo(crawlResult.getVisitId());
-    assertThat(rows.getFirst().get("domain_name")).isEqualTo(crawlResult.getDomainName());
-
-    Optional<VatCrawlResult> result = visitRepository.findVatCrawlResult(visitId);
-    assertThat(result.isPresent()).isTrue();
-    VatCrawlResult found = result.get();
-    assertThat(found.getVisitId()).isEqualTo(visitId);
-    assertThat(found.getVatValues()).isEqualTo(crawlResult.getVatValues());
-    assertThat(found.getDomainName()).isEqualTo(crawlResult.getDomainName());
-    assertThat(found.getCrawlStarted()).isEqualTo(crawlResult.getCrawlStarted());
-    assertThat(found.getCrawlFinished()).isEqualTo(crawlResult.getCrawlFinished());
-    assertThat(found.getVisitedUrls()).isEqualTo(crawlResult.getVisitedUrls());
-
-  }
-
-  @Test
   public void instantsInDuckdb() {
     Instant now = now();
     Timestamp timestamp = Timestamp.from(now);
@@ -178,18 +109,6 @@ class VisitRepositoryTest {
               assertThat(ts).isEqualTo(timestamp);
               assertThat(ts.toInstant()).isEqualTo(instant);
             });
-  }
-
-  @Test
-  public void htmlFeatures() {
-    HtmlFeatures htmlFeatures = new HtmlFeatures();
-    htmlFeatures.visitId = VisitIdGenerator.generate();
-    htmlFeatures.domainName = "google.com";
-    htmlFeatures.crawlTimestamp = ZonedDateTime.now();
-    htmlFeatures.body_text = "hello world";
-    htmlFeatures.external_hosts = List.of("google.com", "facebook.com");
-    htmlFeatures.linkedin_links = List.of("linkedin.com/abc", "https://linkedin.com/xxx");
-    visitRepository.save(htmlFeatures);
   }
 
 }

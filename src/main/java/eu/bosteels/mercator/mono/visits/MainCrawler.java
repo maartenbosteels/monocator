@@ -4,16 +4,12 @@ import be.dnsbelgium.mercator.common.VisitRequest;
 import be.dnsbelgium.mercator.dns.CrawlStatus;
 import be.dnsbelgium.mercator.dns.domain.DnsCrawlResult;
 import be.dnsbelgium.mercator.dns.domain.DnsCrawlService;
-import be.dnsbelgium.mercator.feature.extraction.HtmlFeatureExtractor;
-import be.dnsbelgium.mercator.feature.extraction.persistence.HtmlFeatures;
 import be.dnsbelgium.mercator.smtp.SmtpCrawler;
 import be.dnsbelgium.mercator.smtp.persistence.entities.SmtpVisit;
 import be.dnsbelgium.mercator.tls.domain.TlsCrawlResult;
 import be.dnsbelgium.mercator.tls.ports.TlsCrawler;
-import be.dnsbelgium.mercator.vat.VatCrawlerService;
-import be.dnsbelgium.mercator.vat.crawler.persistence.VatCrawlResult;
-import be.dnsbelgium.mercator.vat.domain.Page;
-import be.dnsbelgium.mercator.vat.domain.SiteVisit;
+import be.dnsbelgium.mercator.vat.WebCrawler;
+import be.dnsbelgium.mercator.vat.crawler.persistence.WebCrawlResult;
 import eu.bosteels.mercator.mono.metrics.Threads;
 import eu.bosteels.mercator.mono.persistence.Repository;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -24,28 +20,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static be.dnsbelgium.mercator.vat.metrics.MetricName.COUNTER_WEB_CRAWLS_DONE;
 
 @SuppressWarnings("SqlDialectInspection")
 @Service
 public class MainCrawler {
 
   private final DnsCrawlService dnsCrawlService;
-  private final VatCrawlerService vatCrawlerService;
+  private final WebCrawler webCrawler;
   private final TlsCrawler tlsCrawler;
-  private final HtmlFeatureExtractor htmlFeatureExtractor;
   private final SmtpCrawler smtpCrawler;
   private final MeterRegistry meterRegistry;
 
   private final Repository repository;
   private final VisitService visitService;
 
+  @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
   private final List<CrawlerModule<?>> crawlerModules;
 
   @Value("${smtp.enabled:true}")
@@ -55,17 +48,15 @@ public class MainCrawler {
 
   @Autowired
   public MainCrawler(DnsCrawlService dnsCrawlService,
-                     VatCrawlerService vatCrawlerService,
-                     HtmlFeatureExtractor htmlFeatureExtractor,
+                     WebCrawler webCrawler,
                      Repository repository,
                      SmtpCrawler smtpCrawler,
                      TlsCrawler tlsCrawler,
                      MeterRegistry meterRegistry,
                      VisitService visitService) {
     this.dnsCrawlService = dnsCrawlService;
-    this.vatCrawlerService = vatCrawlerService;
+    this.webCrawler = webCrawler;
     this.tlsCrawler = tlsCrawler;
-    this.htmlFeatureExtractor = htmlFeatureExtractor;
     this.repository = repository;
     this.meterRegistry = meterRegistry;
     this.visitService = visitService;
@@ -100,30 +91,6 @@ public class MainCrawler {
     }
   }
 
-  private List<HtmlFeatures> findFeatures(VisitRequest visitRequest, SiteVisit siteVisit) {
-    Threads.FEATURE_EXTRACTION.incrementAndGet();
-    try {
-      logger.info("siteVisit = {}", siteVisit);
-      List<HtmlFeatures> featuresList = new ArrayList<>();
-      for (Page page : siteVisit.getVisitedPages().values()) {
-        var html = page.getDocument().html();
-        logger.info("page.url = {}", page.getUrl());
-        var features = htmlFeatureExtractor.extractFromHtml(
-                html,
-                page.getUrl().url().toExternalForm(),
-                visitRequest.getDomainName()
-        );
-        features.visitId = visitRequest.getVisitId();
-        features.crawlTimestamp = ZonedDateTime.now();
-        features.domainName = visitRequest.getDomainName();
-        featuresList.add(features);
-      }
-      return featuresList;
-    } finally {
-      Threads.FEATURE_EXTRACTION.decrementAndGet();
-    }
-  }
-
   private VisitResult collectData(VisitRequest visitRequest) {
     Timer.Sample sample = Timer.start(meterRegistry);
     try {
@@ -136,10 +103,8 @@ public class MainCrawler {
       }
       Map<CrawlerModule<?>, List<?>> collectedData = new HashMap<>();
 
-      SiteVisit siteVisit = vatCrawlerService.visit(visitRequest);
-      VatCrawlResult vatCrawlResult = vatCrawlerService.convert(visitRequest, siteVisit);
-      meterRegistry.counter(COUNTER_WEB_CRAWLS_DONE).increment();
-      List<HtmlFeatures> featuresList = findFeatures(visitRequest, siteVisit);
+      List<WebCrawlResult> webCrawlResults = webCrawler.collectData(visitRequest);
+      collectedData.put(webCrawler, webCrawlResults);
 
       List<TlsCrawlResult> tlsCrawlResults = tlsCrawler.collectData(visitRequest);
       collectedData.put(tlsCrawler, tlsCrawlResults);
@@ -151,42 +116,14 @@ public class MainCrawler {
         collectedData.put(smtpCrawler, smtpVisits);
       }
 
-
       return VisitResult.builder()
               .visitRequest(visitRequest)
               .dnsCrawlResult(dnsCrawlResult)
-              .featuresList(featuresList)
-              .vatCrawlResult(vatCrawlResult)
-              .siteVisit(siteVisit)
               .collectedData(collectedData)
               .build();
     } finally {
       sample.stop(meterRegistry.timer("crawler.collectData"));
     }
   }
-
-  // TODO: finish this idea
-  @SuppressWarnings("unused")
-  public void visit2(VisitRequest visitRequest) {
-    logger.info("Starting visit for {}", visitRequest.getDomainName());
-    Map<String, List<?>> dataPerModule = new HashMap<>();
-    // GET THE DATA
-    for (CrawlerModule<?> crawlerModule : crawlerModules) {
-      List<?> data = crawlerModule.collectData(visitRequest);
-      dataPerModule.put(crawlerModule.key(), data);
-    }
-    // SAVE TO DATABASE
-    for (CrawlerModule<?> crawlerModule : crawlerModules) {
-      List<?> data = dataPerModule.get(crawlerModule.key());
-      crawlerModule.save(data);
-    }
-    // ADD TO CACHE etc
-    logger.info("Saved results for visit to {}", visitRequest.getDomainName());
-    for (CrawlerModule<?> crawlerModule : crawlerModules) {
-      List<?> data = dataPerModule.get(crawlerModule.key());
-      crawlerModule.afterSave(data);
-    }
-  }
-
 
 }
