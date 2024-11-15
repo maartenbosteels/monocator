@@ -31,5 +31,5 @@ jobs:
 
     - name: Publish container image to Docker Hub
       id: publish
-      run: DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} DOCKERHUB_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }} mvn --batch-mode -Dsnyk.skip clean jib
+      run: DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} DOCKERHUB_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }} mvn --batch-mode -Dsnyk.skip clean jib:build
 
