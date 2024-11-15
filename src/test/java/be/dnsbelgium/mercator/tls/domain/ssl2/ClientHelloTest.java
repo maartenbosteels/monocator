@@ -2,13 +2,12 @@ package be.dnsbelgium.mercator.tls.domain.ssl2;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import org.apache.commons.rng.UniformRandomProvider;
-import org.apache.commons.rng.simple.RandomSource;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -17,7 +16,7 @@ public class ClientHelloTest {
 
   ClientHelloEncoder encoder = new ClientHelloEncoder();
   ClientHelloDecoder decoder = new ClientHelloDecoder();
-  UniformRandomProvider rng = RandomSource.XO_RO_SHI_RO_128_PP.create();
+  Random random = new Random();
 
   private final List<SSL2CipherSuite> ciphers = List.of(
       SSL2CipherSuite.SSL_CK_DES_64_CBC_WITH_MD5,
@@ -30,7 +29,7 @@ public class ClientHelloTest {
   @Test
   public void encodeDecode_With_SessionId() {
     byte[] sessionId = new byte[32];
-    rng.nextBytes(sessionId);
+    random.nextBytes(sessionId);
     encodeDecode(sessionId);
   }
 
@@ -42,7 +41,7 @@ public class ClientHelloTest {
 
   public void encodeDecode(byte[] sessionId) {
     byte[] challenge = new byte[32];
-    rng.nextBytes(challenge);
+    random.nextBytes(challenge);
     ClientHello clientHello = new ClientHello(2, ciphers, sessionId, challenge);
 
     int expectedLength = 9 + sessionId.length + challenge.length + 3 * ciphers.size();
@@ -57,7 +56,7 @@ public class ClientHelloTest {
     decoder.decode(null, buffer, output);
     logger.info("output of decoder: {}", output);
     assertThat(output).hasSize(1);
-    assertThat(output.get(0)).isEqualTo(clientHello);
+    assertThat(output.getFirst()).isEqualTo(clientHello);
   }
 
 }

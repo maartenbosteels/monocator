@@ -21,7 +21,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.time.Instant.now;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -80,6 +79,7 @@ public class NioSmtpConversation implements Conversation {
             logger.error("crawl failed: message:{}", e.getMessage());
             smtpConversation.setErrorMessage(e.getMessage());
             smtpConversation.setError(Error.OTHER);
+            Thread.currentThread().interrupt();
             return smtpConversation;
         }
 

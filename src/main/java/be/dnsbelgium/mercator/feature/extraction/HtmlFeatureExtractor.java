@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -493,7 +494,7 @@ public class HtmlFeatureExtractor {
       return null;
     }
     try {
-      URL linkUrl = new URL(url);
+      URL linkUrl = URI.create(url).toURL();
       return linkUrl.getHost();
     } catch (MalformedURLException e) {
       logger.debug("MalformedURLException for url={} msg={}", url, e.getMessage());

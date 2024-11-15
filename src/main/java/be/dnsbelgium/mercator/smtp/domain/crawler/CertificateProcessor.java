@@ -46,8 +46,8 @@ public class CertificateProcessor {
 
   private void process(Certificate cert) {
     try {
-      logger.debug(" cert = " + cert.toString());
-      logger.debug(" cert.type = " + cert.getType());
+      logger.debug(" cert = {}", cert.toString());
+      logger.debug(" cert.type = {}", cert.getType());
       logger.debug(" cert.pubkey = [{}]", cert.getPublicKey().toString());
       logger.debug(" cert.pubkey.algo = [{}]", cert.getPublicKey().getAlgorithm());
       logger.debug(" cert.pubkey.format = [{}]", cert.getPublicKey().getFormat());
@@ -55,14 +55,14 @@ public class CertificateProcessor {
       System.out.println("  cert.class = " + cert.getClass());
 
       if (cert instanceof X509Certificate x509Certificate) {
-        logger.debug("   x509Certificate.getSigAlgName        = " + x509Certificate.getSigAlgName());
-        logger.debug("   x509Certificate.getSigAlgOID         = " + x509Certificate.getSigAlgOID());
-        logger.debug("   x509Certificate.getExtendedKeyUsage  = " + x509Certificate.getExtendedKeyUsage());
-        logger.debug("   x509Certificate.getIssuerX500Principal.getName  = " + x509Certificate.getIssuerX500Principal().getName());
-        logger.debug("   x509Certificate.getIssuerX500Principal.toString = " + x509Certificate.getIssuerX500Principal().toString());
-        logger.debug("   x509Certificate.getSubjectX500Principal.getName = " + x509Certificate.getSubjectX500Principal().getName());
+        logger.debug("   x509Certificate.getSigAlgName        = {}", x509Certificate.getSigAlgName());
+        logger.debug("   x509Certificate.getSigAlgOID         = {}", x509Certificate.getSigAlgOID());
+        logger.debug("   x509Certificate.getExtendedKeyUsage  = {}", x509Certificate.getExtendedKeyUsage());
+        logger.debug("   x509Certificate.getIssuerX500Principal.getName  = {}", x509Certificate.getIssuerX500Principal().getName());
+        logger.debug("   x509Certificate.getIssuerX500Principal.toString = {}", x509Certificate.getIssuerX500Principal().toString());
+        logger.debug("   x509Certificate.getSubjectX500Principal.getName = {}", x509Certificate.getSubjectX500Principal().getName());
 
-        logger.debug("   x509Certificate.getExtendedKeyUsage.getSubjectAlternativeNames = " + x509Certificate.getSubjectAlternativeNames());
+        logger.debug("   x509Certificate.getExtendedKeyUsage.getSubjectAlternativeNames = {}", x509Certificate.getSubjectAlternativeNames());
 
         X500Principal subjectDN = x509Certificate.getSubjectX500Principal();
         X500Principal issuerDN = x509Certificate.getIssuerX500Principal();
