@@ -41,3 +41,11 @@ jobs:
         if: success() || failure()
         uses: ScaCap/action-surefire-report@v1.8.0
 
+      - name: Junit Test Report
+        uses: dorny/test-reporter@v1.9.1
+        if: success() || failure()    # run this step even if previous step failed
+        with:
+          name: Junit Test Report
+          path: '*/target/surefire-reports/*.xml'
+          reporter: java-junit
+          fail-on-error: true

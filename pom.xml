@@ -11,7 +11,7 @@
     </parent>
 
     <groupId>eu.bosteels</groupId>
-    <artifactId>mavencator</artifactId>
+    <artifactId>monocator</artifactId>
     <version>0.0.3-SNAPSHOT</version>
 
     <name>monocator</name>
