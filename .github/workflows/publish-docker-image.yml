@@ -27,8 +27,9 @@ jobs:
         distribution: 'temurin'
         server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
         settings-path: ${{ github.workspace }} # location for the settings.xml file
+        cache: maven
 
     - name: Publish container image to Docker Hub
       id: publish
-      run: mvn --batch-mode -Dsnyk.skip clean jib -PDOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} -PDOCKERHUB_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }}
+      run: DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} DOCKERHUB_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }} mvn --batch-mode -Dsnyk.skip clean jib
 
