@@ -9,7 +9,7 @@ on:
     types: [created]
 
 jobs:
-  build:
+  publish:
 
     runs-on: ubuntu-latest
     permissions:
@@ -31,5 +31,5 @@ jobs:
 
     - name: Publish container image to Docker Hub
       id: publish
-      run: DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} DOCKERHUB_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }} mvn --batch-mode -Dsnyk.skip clean jib:build
+      run: DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} DOCKERHUB_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }} mvn --batch-mode mvn clean compile jib:build
 
