@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - maven
   release:
     types: [created]
 
@@ -27,10 +28,7 @@ jobs:
         server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
         settings-path: ${{ github.workspace }} # location for the settings.xml file
 
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
-
-    - name: Build with Gradle & publish to Docker Hub
+    - name: Publish container image to Docker Hub
       id: publish
-      run: ./gradlew clean build jib -PDOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} -PDOCKERHUB_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }}
+      run: mvn --batch-mode -Dsnyk.skip clean jib -PDOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} -PDOCKERHUB_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }}
 
