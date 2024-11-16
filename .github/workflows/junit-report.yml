@@ -27,7 +27,7 @@ jobs:
       - name: Run the Maven verify phase
         run: mvn --batch-mode -Dsnyk.skip verify
 
-      - uses: dorny/test-reporter@v1
+      - uses: dorny/test-reporter@v1.9.1
         if: success() || failure()
         with:
           artifact: test-results                # artifact name
