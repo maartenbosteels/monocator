@@ -1,9 +1,8 @@
 name: 'Test Report'
 on:
-  workflow_run:
-    workflows: ['Build & publish to docker hub']  # runs after other workflow
-    types:
-      - completed
+  push:
+    branches:
+      - none
 permissions:
   contents: read
   actions: read
