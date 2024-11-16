@@ -34,27 +34,22 @@ jobs:
           cache: maven
 
       - name: Run the Maven verify phase
-        run: mvn --batch-mode -Dsnyk.skip verify
+        run: mvn --batch-mode --update-snapshots -Dsnyk.skip verify
 
-      - name: Test Report
-        uses: phoenix-actions/test-reporting@v8
-        id: test-report               # Set ID reference for step
-        if: success() || failure()    # run this step even if previous step failed
+      - run: mkdir staging && cp target/*.jar staging
+      - uses: actions/upload-artifact@v4
         with:
-          name: Junit Tests
+          name: Package
+          path: staging
+
+#      - name: Publish Test Report
+#        if: success() || failure()
+#        uses: ScaCap/action-surefire-report@v1.8.0
+
+      - uses: dorny/test-reporter@v1.9.1
+        if: success() || failure()
+        with:
+          name: Junit Test Report
           path: 'target/surefire-reports/*.xml'
           reporter: java-junit
-
-#
-#      - name: Junit Test Report
-#        uses: dorny/test-reporter@v1.9.1
-#        if: success() || failure()
-#        with:
-#          name: Junit Tests                     # Name of the check run which will be created
-#          path: 'target/surefire-reports/*.xml'
-#          reporter: java-junit
-#          fail-on-error: true
-
-      - name: Publish container image to Docker Hub
-        id: publish
-        run: DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} DOCKERHUB_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }} mvn --batch-mode clean compile jib:build
+          fail-on-error: true
