@@ -54,10 +54,10 @@ class VisitRepositoryTest {
     logger.info("init done");
   }
 
-  @Test
-  void failOnPurpose() {
-    fail("tesing failure report");
-  }
+//  @Test
+//  void failOnPurpose() {
+//    fail("tesing failure report");
+//  }
 
   @Test
   @Transactional

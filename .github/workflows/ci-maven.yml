@@ -36,14 +36,24 @@ jobs:
       - name: Run the Maven verify phase
         run: mvn --batch-mode -Dsnyk.skip verify
 
-      - name: Junit Test Report
-        uses: dorny/test-reporter@v1.9.1
-        if: success() || failure()
+      - name: Test Report
+        uses: phoenix-actions/test-reporting@v8
+        id: test-report               # Set ID reference for step
+        if: success() || failure()    # run this step even if previous step failed
         with:
-          name: Junit Tests                     # Name of the check run which will be created
+          name: Junit Tests
           path: 'target/surefire-reports/*.xml'
           reporter: java-junit
-          fail-on-error: true
+
+#
+#      - name: Junit Test Report
+#        uses: dorny/test-reporter@v1.9.1
+#        if: success() || failure()
+#        with:
+#          name: Junit Tests                     # Name of the check run which will be created
+#          path: 'target/surefire-reports/*.xml'
+#          reporter: java-junit
+#          fail-on-error: true
 
       - name: Publish container image to Docker Hub
         id: publish
