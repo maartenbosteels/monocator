@@ -1,4 +1,4 @@
-name: Run unit tests
+name: Build & publish to docker hub
 
 on:
   push:
@@ -30,15 +30,15 @@ jobs:
       - name: Run the Maven verify phase
         run: mvn --batch-mode -Dsnyk.skip verify
 
-      - name: Junit Test Report
-        uses: dorny/test-reporter@v1.9.1
-        if: success() || failure()
-        with:
-          name: Junit Test Report
-          path: 'target/surefire-reports/*.xml'
-          reporter: java-junit
-          fail-on-error: true
-
+#      - name: Junit Test Report
+#        uses: dorny/test-reporter@v1.9.1
+#        if: success() || failure()
+#        with:
+#          name: Junit Test Report
+#          path: 'target/surefire-reports/*.xml'
+#          reporter: java-junit
+#          fail-on-error: true
+#
       - name: Publish container image to Docker Hub
         id: publish
         run: DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} DOCKERHUB_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }} mvn --batch-mode clean compile jib:build
