@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - maven
   schedule:
     - cron: '30 5 * * *'
 
@@ -30,12 +29,6 @@ jobs:
 
       - name: Run the Maven verify phase
         run: mvn --batch-mode -Dsnyk.skip verify
-
-#      - run: mkdir staging && cp target/*.jar staging
-#      - uses: actions/upload-artifact@v4
-#        with:
-#          name: Package
-#          path: staging
 
       - uses: dorny/test-reporter@v1.9.1
         if: success() || failure()
