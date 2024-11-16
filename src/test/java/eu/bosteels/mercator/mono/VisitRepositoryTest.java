@@ -27,6 +27,7 @@ import java.util.List;
 
 import static be.dnsbelgium.mercator.test.TestUtils.now;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 class VisitRepositoryTest {
 
@@ -51,6 +52,11 @@ class VisitRepositoryTest {
     visitRepository.init();
     jdbcClient = JdbcClient.create(dataSource);
     logger.info("init done");
+  }
+
+  @Test
+  void failOnPurpose() {
+    fail("tesing failure report");
   }
 
   @Test
