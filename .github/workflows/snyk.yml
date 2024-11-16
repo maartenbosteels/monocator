@@ -3,7 +3,7 @@ name: Check vulnerabilities
 on:
   push:
     branches:
-      - main_skipped_for_now
+      - main
   schedule:
     - cron: '30 5 * * *'
 
