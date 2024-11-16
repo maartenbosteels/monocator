@@ -1,3 +1,5 @@
+[![CodeQL](https://github.com/maartenbosteels/monocator/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/maartenbosteels/monocator/actions/workflows/github-code-scanning/codeql)
+
 # Intro
 
 Monocator is a crawler based on [Mercator](https://github.com/DNSBelgium/mercator)
