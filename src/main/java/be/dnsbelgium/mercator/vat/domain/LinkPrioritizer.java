@@ -35,8 +35,9 @@ public class LinkPrioritizer {
 
   private double getMaxScore(String s, Map<String,Double> weights) {
     double score = 0.0;
-    for (String keyword : weights.keySet()) {
-      Double weight = weights.get(keyword);
+    for (Map.Entry<String, Double> entry : weights.entrySet()) {
+      Double weight = entry.getValue();
+      String keyword = entry.getKey();
       if (s.contains(keyword) && score < weight) {
         score = weight;
       }

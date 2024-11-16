@@ -113,7 +113,8 @@ public class RateLimiter {
     }
     try {
       Thread.sleep(millis);
-    } catch (InterruptedException ignore) {
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
     }
   }
 

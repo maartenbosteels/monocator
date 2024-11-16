@@ -9,8 +9,6 @@ import be.dnsbelgium.mercator.dns.dto.RRecord;
 import be.dnsbelgium.mercator.dns.dto.RecordType;
 import be.dnsbelgium.mercator.dns.persistence.Request;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.rng.UniformRandomProvider;
-import org.apache.commons.rng.simple.RandomSource;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +54,7 @@ class DnsCrawlServiceTest {
   @Autowired
   DnsCrawlService dnsCrawlService;
 
-  UniformRandomProvider rng = RandomSource.XO_RO_SHI_RO_128_PP.create();
+  Random random = new Random();
 
   private static final Logger logger = LoggerFactory.getLogger(DnsCrawlServiceTest.class);
 
@@ -269,7 +267,7 @@ class DnsCrawlServiceTest {
 
   private DnsRequest randomNonEmptyResponse() {
     List<RRecord> records = new ArrayList<>();
-    int numResponses = rng.nextInt(1,5);
+    int numResponses = random.nextInt(1,5);
     for (int i=0; i<numResponses; i++) {
       records.add(new RRecord(TTL, RandomStringUtils.randomAlphanumeric(10)));
     }
