@@ -1,4 +1,4 @@
-package be.dnsbelgium.mercator;
+package be.dnsbelgium.mercator.persistence;
 
 import jakarta.annotation.PreDestroy;
 import lombok.SneakyThrows;

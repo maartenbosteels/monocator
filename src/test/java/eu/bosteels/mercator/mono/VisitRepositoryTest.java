@@ -1,6 +1,6 @@
 package eu.bosteels.mercator.mono;
 
-import be.dnsbelgium.mercator.DuckDataSource;
+import be.dnsbelgium.mercator.persistence.DuckDataSource;
 import be.dnsbelgium.mercator.common.VisitIdGenerator;
 import be.dnsbelgium.mercator.dns.domain.DnsCrawlResult;
 import be.dnsbelgium.mercator.dns.dto.RecordType;
@@ -27,7 +27,6 @@ import java.util.List;
 
 import static be.dnsbelgium.mercator.test.TestUtils.now;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
 
 class VisitRepositoryTest {
 
@@ -46,7 +45,7 @@ class VisitRepositoryTest {
     dataSource = new DuckDataSource("jdbc:duckdb:");
     WebRepository webRepository = new WebRepository(dataSource, meterRegistry);
     TableCreator tableCreator = new TableCreator(dataSource, null, null, webRepository);
-    visitRepository = new VisitRepository(dataSource, tableCreator, meterRegistry);
+    visitRepository = new VisitRepository(dataSource, tableCreator, webRepository, meterRegistry);
     visitRepository.setDatabaseDirectory(tempDir);
     visitRepository.setExportDirectory(tempDir);
     visitRepository.init();
