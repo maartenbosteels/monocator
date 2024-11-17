@@ -128,6 +128,9 @@ class WebRepositoryTest {
         System.out.println("found.external_hosts = " + found.getFirst().external_hosts.size());
         System.out.println("external_hosts[0] = " + found.getFirst().external_hosts.get(0));
         System.out.println("external_hosts[1] = " + found.getFirst().external_hosts.get(1));
-        assertThat(found.getFirst()).isEqualTo(htmlFeatures);
+        assertThat(found.getFirst())
+                .usingRecursiveComparison()
+                .isEqualTo(htmlFeatures);
     }
+
 }
