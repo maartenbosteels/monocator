@@ -65,10 +65,6 @@ public class SmtpCrawler implements CrawlerModule<SmtpVisit> {
     collectedData.forEach(this::save);
   }
 
-  @Override
-  public void saveAll(List<SmtpVisit> collectedData) {
-    CrawlerModule.super.saveAll(collectedData);
-  }
 
   @Override
   public void afterSave(List<?> collectedData) {
