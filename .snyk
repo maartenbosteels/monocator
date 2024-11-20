@@ -7,3 +7,8 @@ ignore:
         reason: 'No fix available and not really an issue for this project'
         expires: '2025-11-01T00:00:00.000Z'
 
+    'SNYK-JAVA-ORGSPRINGFRAMEWORK-8384234':
+     - '*':
+        reason: 'No fix available and not an issue for this project (UI of crawler should not be publicly exposed anyway)'
+        expires: '2025-11-01T00:00:00.000Z'
+
