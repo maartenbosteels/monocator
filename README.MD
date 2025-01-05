@@ -42,6 +42,10 @@ sdk install maven 3.9.9
 mvn package
 ```
 Will compile the sources and run all (enabled) tests.
+If you do not yet have a SNY token, you can skip snyk like this
+```
+mvn -Dsnyk.skip package
+```
 
 ## Running locally compiled version
 
